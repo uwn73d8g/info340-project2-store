@@ -78,24 +78,28 @@ public class DatabaseAccess {
 		return new Order[]{};
 	}
 	
-	public static Product[] GetProducts() throws Exception{
+	public static Product[] GetProducts(){
 	    ResultSet result = null;
 
+        List<Product> prod = new ArrayList<Product>();
+
 	    try {
+	        DatabaseAccess.open();
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products");
             result = stmt.executeQuery();
             stmt.clearParameters();
+
+            while(result.next() && result != null){
+                prod.add(new Product(result.getInt("id"), result.getInt("QtyInStock"),
+                        result.getString("Name"), result.getString("Description"),
+                        result.getDouble("Price"), 0, null));
+            }
         }
         catch (SQLException e){
             e.printStackTrace();
         }
-
-        List<Product> prod = new ArrayList<Product>();
-
-        while(result.next() && result != null){
-            prod.add(new Product(result.getInt("id"), result.getInt("QtyInStock"),
-                    result.getString("Name"), result.getString("Description"),
-                    result.getDouble("Price"), 0, null));
+        finally {
+            DatabaseAccess.close();
         }
 
         return prod.toArray(new Product[prod.size()]);
@@ -149,34 +153,48 @@ public class DatabaseAccess {
                     "p.id = pc.id AND pc.ProductId = ?");
             stmt.setInt(1, productID);
             ResultSet result = stmt.executeQuery();
-            ResultSetMetaData data = result.getMetaData();
+            stmt.clearParameters();
 
             while (result.next()) {
                 p = new Product(productID, result.getInt("QtyInStock"),
                         result.getString("Name"), result.getString("Description"),
                         result.getDouble("Price"), 0, null);
             }
-            DatabaseAccess.close();
 
             return p;
         }
         catch (SQLException e){
             e.printStackTrace();
         }
-		return null;
+        finally {
+            DatabaseAccess.close();
+        }
+        return null;
 	}
 	
-	public static Customer [] GetCustomers () {
-		// TODO:  Query the database to retrieve a list of customers.
-		
-		// DUMMY VALUES FOLLOW
-		Customer c1 = new Customer(1, "Kevin Fleming", "k@u");
+	public static Customer[] GetCustomers () {
+	    ResultSet result = null;
+	    List<Customer> custList = new ArrayList<Customer>();
+		try{
+		    DatabaseAccess.open();
+		    PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Customers");
+		    result = stmt.executeQuery();
+		    stmt.clearParameters();
 
-		Customer c2 = new Customer(2, "Niki Cassaro", "k@u");
+            while (result.next()) {
+                custList.add(new Customer(result.getInt("id"), result.getString("Name"),
+                        result.getString("Email")));
+            }
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+            DatabaseAccess.close();
+        }
 
-		Customer c3 = new Customer(3, "Ava Fleming", "k@u");
-		
-		return new Customer [] { c1, c2, c3 };
+        return custList.toArray(new Customer[custList.size()]);
+
 	}
 	
 	public static Order [] GetCustomerOrders (Customer c) {
