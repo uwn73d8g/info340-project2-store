@@ -143,8 +143,9 @@ public class DatabaseAccess {
         Product p = null;
 
         try{
+            DatabaseAccess.open();
             PreparedStatement stmt = conn.prepareStatement("SELECT pc.ProductId, p.Name, p.Description, p.Price, " +
-                    "p.QtyInStock, pc.Comment FROM ProductComments pc, Products p WHERE \n" +
+                    "p.QtyInStock, pc.Comment FROM ProductComments pc, Products p WHERE " +
                     "p.id = pc.id AND pc.ProductId = ?");
             stmt.setInt(1, productID);
             ResultSet result = stmt.executeQuery();
@@ -155,6 +156,7 @@ public class DatabaseAccess {
                         result.getString("Name"), result.getString("Description"),
                         result.getDouble("Price"), 0, null);
             }
+            DatabaseAccess.close();
 
             return p;
         }
