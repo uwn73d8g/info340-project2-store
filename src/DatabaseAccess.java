@@ -44,7 +44,7 @@ public class DatabaseAccess {
 	}
 
     /** Performs additional preparation after the connection is opened. */
-    public void prepare() throws SQLException {
+    public static void prepare() throws SQLException {
         // NOTE: We must explicitly set the isolation level to SERIALIZABLE as it
         //       defaults to allowing non-repeatable reads.
         beginTxnStmt = conn.prepareStatement(
@@ -299,12 +299,20 @@ public class DatabaseAccess {
 
                 ResultSet result = stmt.executeQuery();
 
-                if (result.getInt("QtyInStock") >= qtyRequested){
+                ResultSetMetaData data = result.getMetaData();
 
+                int qtyAvailable = 0;
+                while (result.next()) {
+                    qtyAvailable = result.getInt("QtyInStock");
+                }
+
+                if (qtyAvailable >= qtyRequested){
+                    System.out.println("Can be created");
                     //TODO: INSERT INTO DB HERE AND UPDATE QUANTITIES
 
                 }
                 else {
+                    System.out.println("NO ORDER");
                     orderSuccess = false;
                 }
 
