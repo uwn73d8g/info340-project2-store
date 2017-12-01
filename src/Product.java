@@ -20,17 +20,17 @@ public class Product {
      * @param name
      * @param description
      * @param price
-     * @param relavance
+     * @param relevance
      * @param userComments
      */
 	public Product(int productID, int inStock, String name, String description,
-				   double price, double relavance, String[] userComments) {
+				   double price, double relevance, String[] userComments) {
 		this.productID = productID;
 		this.inStock = inStock;
 		this.name = name;
 		this.description = description;
 		this.price = price;
-		this.relevance = relavance;
+		this.relevance = relevance;
 		this.userComments = userComments;
 	}
 

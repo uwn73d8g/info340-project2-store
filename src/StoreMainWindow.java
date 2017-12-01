@@ -157,13 +157,13 @@ public class StoreMainWindow {
 		// TODO Auto-generated method stub
 		//Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
-        DatabaseAccess.open();
+       // DatabaseAccess.open();
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI();
             }
         });
-        DatabaseAccess.close();
+        //DatabaseAccess.close();
 	}
 	
 	private static void jButton1ActionPerformed(ActionEvent evt) {

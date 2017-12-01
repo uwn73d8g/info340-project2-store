@@ -10,6 +10,10 @@ public class DatabaseAccess {
 
 	private static Connection conn;
 
+    private static PreparedStatement beginTxnStmt;
+    private static PreparedStatement commitTxnStmt;
+    private static PreparedStatement abortTxnStmt;
+
 	/** Opens a connection to the database using the given settings. */
 	public static void open(){
 		// Make sure the JDBC driver is loaded.
@@ -36,6 +40,16 @@ public class DatabaseAccess {
 	        e.printStackTrace();
         }
 	}
+
+    /** Performs additional preparation after the connection is opened. */
+    public void prepare() throws SQLException {
+        // NOTE: We must explicitly set the isolation level to SERIALIZABLE as it
+        //       defaults to allowing non-repeatable reads.
+        beginTxnStmt = conn.prepareStatement(
+                "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; BEGIN TRANSACTION;");
+        commitTxnStmt = conn.prepareStatement("COMMIT TRANSACTION");
+        abortTxnStmt = conn.prepareStatement("ROLLBACK TRANSACTION");
+    }
 	
 
 	public static Order [] GetPendingOrders(){
@@ -66,9 +80,11 @@ public class DatabaseAccess {
 	
 	public static Product[] GetProducts() throws Exception{
 	    ResultSet result = null;
+
 	    try {
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products");
             result = stmt.executeQuery();
+            stmt.clearParameters();
         }
         catch (SQLException e){
             e.printStackTrace();
@@ -88,6 +104,7 @@ public class DatabaseAccess {
 	public static void main(String [] args) throws Exception{
 	    DatabaseAccess.open();
 	    DatabaseAccess.GetProducts();
+	    DatabaseAccess.GetProductDetails(1);
 	    DatabaseAccess.close();
 		//DatabaseAccess access = new DatabaseAccess();
 		//access.GetProducts();
@@ -115,14 +132,36 @@ public class DatabaseAccess {
 		return o;
 	}
 
-	public static Product GetProductDetails (int ProductID) {
+    /**
+     * Gets the product details by running a SQL query on the database
+     *
+     * @param productID the product id to find in the db
+     * @return a Product object from the query or if the product id does
+     *         not exist then null is returned
+     */
+	public static Product GetProductDetails (int productID) {
+        Product p = null;
 
-        Product p = new Product(1, 10, "Monitor, 19 in", "A great monitor",
-                196, 0.7,
-                new String [] { "I bought this product last year and it's still the best monitor I've had.",
-                        "After 6 months the color started going out, not sure if it was just mine or all of them" });
-		return p;
-		
+        try{
+            PreparedStatement stmt = conn.prepareStatement("SELECT pc.ProductId, p.Name, p.Description, p.Price, " +
+                    "p.QtyInStock, pc.Comment FROM ProductComments pc, Products p WHERE \n" +
+                    "p.id = pc.id AND pc.ProductId = ?");
+            stmt.setInt(1, productID);
+            ResultSet result = stmt.executeQuery();
+            ResultSetMetaData data = result.getMetaData();
+
+            while (result.next()) {
+                p = new Product(productID, result.getInt("QtyInStock"),
+                        result.getString("Name"), result.getString("Description"),
+                        result.getDouble("Price"), 0, null);
+            }
+
+            return p;
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+		return null;
 	}
 	
 	public static Customer [] GetCustomers () {
@@ -166,4 +205,22 @@ public class DatabaseAccess {
 		
 		JOptionPane.showMessageDialog(null, "Create order for " + c.getName() + " for " + Integer.toString(LineItems.length) + " items.");
 	}
+
+    /** Puts the connection into a new transaction. */
+    public static void beginTransaction() throws SQLException {
+        conn.setAutoCommit(false);  // do not commit until explicitly requested
+        beginTxnStmt.executeUpdate();
+    }
+
+    /** Commits the current transaction. */
+    public static void commitTransaction() throws SQLException {
+        commitTxnStmt.executeUpdate();
+        conn.setAutoCommit(true);  // go back to one transaction per statement
+    }
+
+    /** Aborts the current transaction. */
+    public static void rollbackTransaction() throws SQLException {
+        abortTxnStmt.executeUpdate();
+        conn.setAutoCommit(true);  // go back to one transaction per statement
+    }
 }
