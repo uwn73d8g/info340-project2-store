@@ -12,6 +12,17 @@ public class Product {
 	/** string array that stores all user comments */
 	private String[] userComments;
 
+    /**
+     * Creates a new product object
+     *
+     * @param productID
+     * @param inStock
+     * @param name
+     * @param description
+     * @param price
+     * @param relavance
+     * @param userComments
+     */
 	public Product(int productID, int inStock, String name, String description,
 				   double price, double relavance, String[] userComments) {
 		this.productID = productID;

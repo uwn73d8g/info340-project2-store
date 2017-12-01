@@ -9,6 +9,19 @@ public class Order {
 	private LineItem[] lineItems;
 	private String shippingAddress, billingAddress, billingInfo, status;
 
+    /**
+     * Creates a new order object
+     *
+     * @param orderID
+     * @param orderDate
+     * @param status
+     * @param customer
+     * @param totalCost
+     * @param lineItems
+     * @param shippingAddress
+     * @param billingAddress
+     * @param billingInfo
+     */
 	public Order(int orderID, Date orderDate, String status, Customer customer, double totalCost,
 				 LineItem[] lineItems, String shippingAddress, String billingAddress, String billingInfo) {
 		this.orderID = orderID;

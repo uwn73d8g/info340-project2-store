@@ -3,6 +3,12 @@ public class Customer {
 	private int customerID;
 	private String name, email;
 
+    /**
+     * Creates a new customer object
+     * @param customerID
+     * @param name
+     * @param email
+     */
     public Customer(int customerID, String name, String email) {
         this.customerID = customerID;
         this.name = name;
