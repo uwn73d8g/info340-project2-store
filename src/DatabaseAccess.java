@@ -258,8 +258,8 @@ public class DatabaseAccess {
 	    try{
 	        DatabaseAccess.open();
 	        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM ProductComments pc, Products p " +
-                    "WHERE pc.Comment LIKE '%'?'%' AND p.id = pc.ProductId");
-	        stmt.setString(1, query);
+                    "WHERE pc.Comment LIKE ? AND p.id = pc.ProductId");
+	        stmt.setString(1, "'%" + query + "%'");
 	        result = stmt.executeQuery();
 	        stmt.clearParameters();
 
