@@ -2,7 +2,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
@@ -12,20 +11,30 @@ public class DatabaseAccess {
 	private static Connection conn;
 
 	/** Opens a connection to the database using the given settings. */
-	public static void open() throws Exception {
+	public static void open(){
 		// Make sure the JDBC driver is loaded.
-		String driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-		Class.forName(driverClassName).newInstance();
+        try {
+            String driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+            Class.forName(driverClassName).newInstance();
 
-		// Open a connection to our database.
-        conn = DriverManager.getConnection("jdbc:sqlserver://info340a-au17.ischool.uw.edu;database=P2_Group8;",
-                "ericpeng", "sql-1636149");
+            // Open a connection to our database.
+            conn = DriverManager.getConnection("jdbc:sqlserver://info340a-au17.ischool.uw.edu;database=P2_Group8;",
+                    "ericpeng", "sql-1636149");
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
 	}
 
 	/** Closes the connection to the database. */
-	public static void close() throws SQLException {
-		conn.close();
-		conn = null;
+	public static void close() {
+	    try {
+            conn.close();
+            conn = null;
+        }
+        catch (Exception e){
+	        e.printStackTrace();
+        }
 	}
 	
 
@@ -33,13 +42,13 @@ public class DatabaseAccess {
 		// TODO:  Query the database and retrieve the information.
 		// resultset.findcolumn(string col)
 
-		try {
-            PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
-            ResultSet order = pending.executeQuery();
-        }
-        catch(SQLException e){
+		//try {
+            //PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
+            //ResultSet order = pending.executeQuery();
+        //}
+        //catch(SQLException e){
 
-        }
+        //}
 	    /*Order[] a = new Order[];
 	    if (order.next()) {
 	    	while(order.next()) {
@@ -56,25 +65,24 @@ public class DatabaseAccess {
 	}
 	
 	public static Product[] GetProducts() throws Exception{
-		PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products");
-
-		ResultSet result = stmt.executeQuery();
-		ResultSetMetaData data = result.getMetaData();
+	    ResultSet result = null;
+	    try {
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products");
+            result = stmt.executeQuery();
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
 
         List<Product> prod = new ArrayList<Product>();
 
-        while(result.next()){
-            //prod.add(new Product(result.getInt("ID")))
+        while(result.next() && result != null){
+            prod.add(new Product(result.getInt("id"), result.getInt("QtyInStock"),
+                    result.getString("Name"), result.getString("Description"),
+                    result.getDouble("Price"), 0, null));
         }
-        /*while (result.next()){
-            for(int k = 1; k < data.getColumnCount(); k++){
-                if (k > 1) System.out.print(",  ");
-                String columnValue = result.getString(k);
-                System.out.print(columnValue + " " + data.getColumnName(k));
-            }
-            System.out.println();
-        }*/
-        return new Product [] {};
+
+        return prod.toArray(new Product[prod.size()]);
 	}
 
 	public static void main(String [] args) throws Exception{
