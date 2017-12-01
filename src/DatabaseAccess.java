@@ -105,17 +105,6 @@ public class DatabaseAccess {
         return prod.toArray(new Product[prod.size()]);
 	}
 
-	public static void main(String [] args) throws Exception{
-	    DatabaseAccess.open();
-	    DatabaseAccess.GetProducts();
-	    DatabaseAccess.GetProductDetails(1);
-	    DatabaseAccess.close();
-		//DatabaseAccess access = new DatabaseAccess();
-		//access.GetProducts();
-        //access.open();
-		//DatabaseAccess.GetProducts();
-	}
-
 	public static Order GetOrderDetails(int OrderID) {
 		// TODO:  Query the database to get the flight information as well as all 
 		// the reservations.
@@ -155,6 +144,7 @@ public class DatabaseAccess {
             ResultSet result = stmt.executeQuery();
             stmt.clearParameters();
 
+            // TODO: Update the user commments at the end
             while (result.next()) {
                 p = new Product(productID, result.getInt("QtyInStock"),
                         result.getString("Name"), result.getString("Description"),
@@ -197,18 +187,34 @@ public class DatabaseAccess {
 
 	}
 	
-	public static Order [] GetCustomerOrders (Customer c) {
+	public static Order[] GetCustomerOrders (Customer c) {
+	    ResultSet result = null;
+	    int customerId = c.getCustomerID();
+	    List<Order> orders = new ArrayList<Order>();
 
-	    // TODO: Get the Orders
+	    try{
+	        DatabaseAccess.open();
+	        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Orders o " +
+                    "WHERE o.CustomerId = ?");
+	        stmt.setInt(1, customerId);
+	        result = stmt.executeQuery();
+	        stmt.clearParameters();
 
-        // DUMMY VALUES FOLLOW
-	    Customer cust = new Customer(1, "Kevin", "kevin@pathology.washington.edu");
-	    Order o = new Order(1, new Date(), "ORDERED", cust, 520.20,
-                null, "1959 NE Pacific St, Seattle, WA 98195",
-                "1959 NE Pacific St, Seattle, WA 98195",
-                "PO 12345");
+	        // TODO: Need to updated date, total cost, lineitems after other methods created
+	        while (result.next()){
+	            orders.add(new Order(result.getInt("id"), new Date(), result.getString("Status"),
+                        c, 0, null, result.getString("ShippingAddress"),
+                        result.getString("BillingAddress"), result.getString("BillingInfo")));
+            }
+        }
+        catch (SQLException e){
+	        e.printStackTrace();
+        }
+        finally {
+            DatabaseAccess.close();
+        }
 
-		return new Order [] { o };
+        return orders.toArray(new Order[orders.size()]);
 	}
 	
 	public static Product [] SearchProductReviews(String query) {
