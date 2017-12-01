@@ -99,25 +99,23 @@ public class DatabaseAccess {
 	    rs.close();
 		
 		// get all the LineItems and store them in a LineItem[]
-	    LineItem[] l;
-		String query = "SELECT * FROM Order o\n"  +
-                   "JOIN Customer c ON o.CustomerId = c.id\n" + "WHERE o.id = ?";
+	    ArrayList<LineItem> l = new ArrayList<LineItem>();
+		String query = "SELECT * FROM LineItem\n"  +
+                    "WHERE OrderId = ?";
 		PreparedStatement searchOrder = conn.prepareStatement(query);
 	    searchOrder.setInt(1, OrderID);
 	    ResultSet rs = searchOrder.executeQuery();
-	    while (rs.next()) {
-	    	o.OrderID = OrderID;
-			o.Customer = new Customer();
-			o.Customer.CustomerID = rs.getInt("CustomerId");
-			o.Customer.Name = rs.getString("Name");
-			o.Customer.Email = rs.getString("Email")
-			// o.OrderDate = new Date();
-			o.Status = rs.getString("Status");
-			// o.TotalCost = 520.20;
-			o.BillingAddress = rs.getString("BillingAddress");
-			o.BillingInfo	 = rs.getString("BillingInfo");
-			o.ShippingAddress= rs.getString("ShippingAddress");
-	    }
+	    wwhile (rs.next()) {
+	        results.add(new Flight(rs.getInt("fid"), rs.getInt("year"), 
+	                rs.getInt("month_id"), rs.getInt("day_of_month"),
+	                rs.getString("name"), rs.getString("flight_num"),
+	                    rs.getString("origin_city"),
+	                    rs.getString("dest_city"),
+	                    (int)rs.getFloat("actual_time"))
+	              );
+	            }
+	          rs.close();
+
 	    rs.close();
 		LineItem li = new LineItem();
 		li.Order = o;
