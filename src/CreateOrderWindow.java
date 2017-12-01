@@ -25,7 +25,7 @@ import javax.swing.border.BevelBorder;
 * Use of Jigloo implies acceptance of these licensing terms.
 * A COMMERCIAL LICENSE HAS NOT BEEN PURCHASED FOR
 * THIS MACHINE, SO JIGLOO OR THIS CODE CANNOT BE USED
-* LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE. abc
+* LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE.
 */
 public class CreateOrderWindow extends JFrame {
 
@@ -83,7 +83,7 @@ public class CreateOrderWindow extends JFrame {
 		}
 	}
 	
-	private JPanel getJPanel2() {
+	private JPanel getJPanel2() throws Exception{
 		if(jPanel2 == null) {
 			jPanel2 = new JPanel();
 			BorderLayout jPanel2Layout = new BorderLayout();
@@ -112,7 +112,7 @@ public class CreateOrderWindow extends JFrame {
 		return jComboBox1;
 	}
 	
-	private JPanel getJPanel3() {
+	private JPanel getJPanel3() throws Exception{
 		if(jPanel3 == null) {
 			jPanel3 = new JPanel();
 			GridLayout jPanel3Layout = new GridLayout(3, 2);
@@ -140,7 +140,7 @@ public class CreateOrderWindow extends JFrame {
 		return jLabel2;
 	}
 	
-	private JComboBox getJComboBox2() {
+	private JComboBox getJComboBox2() throws Exception{
 		if(jComboBox2 == null) {
 			ComboBoxModel jComboBox2Model = 
 				new DefaultComboBoxModel(
