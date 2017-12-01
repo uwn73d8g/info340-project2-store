@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 
 public class DatabaseAccess {
 
-	private Connection conn;
+	private static Connection conn;
 
 	/** Opens a connection to the database using the given settings. */
 	public void open(Properties settings) throws Exception {
@@ -68,20 +68,49 @@ public class DatabaseAccess {
 		// TODO:  Query the database to get the flight information as well as all 
 		// the reservations.
 		
-		// DUMMY DATA FOLLOWS
+		// get the order details and store them in a Order object
 		Order o = new Order();
-		o.OrderID = 1;
-		o.Customer = new Customer();
-		o.Customer.CustomerID = 1;
-		o.Customer.Name = "Kevin";
-		o.Customer.Email = "kevin@pathology.washington.edu";
-		o.OrderDate = new Date();
-		o.Status = "ORDERED";
-		o.TotalCost = 520.20;
-		o.BillingAddress = "1959 NE Pacific St, Seattle, WA 98195";
-		o.BillingInfo	 = "PO 12345";
-		o.ShippingAddress= "1959 NE Pacific St, Seattle, WA 98195";
-
+		String query = "SELECT * FROM Order o\n"  +
+                   "JOIN Customer c ON o.CustomerId = c.id\n" + "WHERE o.id = ?";
+		PreparedStatement searchOrder = conn.prepareStatement(query);
+	    searchOrder.setInt(1, OrderID);
+	    ResultSet rs = searchOrder.executeQuery();
+	    while (rs.next()) {
+	    	o.OrderID = OrderID;
+			o.Customer = new Customer();
+			o.Customer.CustomerID = rs.getInt("CustomerId");
+			o.Customer.Name = rs.getString("Name");
+			o.Customer.Email = rs.getString("Email")
+			// o.OrderDate = new Date();
+			o.Status = rs.getString("Status");
+			// o.TotalCost = 520.20;
+			o.BillingAddress = rs.getString("BillingAddress");
+			o.BillingInfo	 = rs.getString("BillingInfo");
+			o.ShippingAddress= rs.getString("ShippingAddress");
+	    }
+	    rs.close();
+		
+		// get all the LineItems and store them in a LineItem[]
+	    LineItem[] l;
+		String query = "SELECT * FROM Order o\n"  +
+                   "JOIN Customer c ON o.CustomerId = c.id\n" + "WHERE o.id = ?";
+		PreparedStatement searchOrder = conn.prepareStatement(query);
+	    searchOrder.setInt(1, OrderID);
+	    ResultSet rs = searchOrder.executeQuery();
+	    while (rs.next()) {
+	    	o.OrderID = OrderID;
+			o.Customer = new Customer();
+			o.Customer.CustomerID = rs.getInt("CustomerId");
+			o.Customer.Name = rs.getString("Name");
+			o.Customer.Email = rs.getString("Email")
+			// o.OrderDate = new Date();
+			o.Status = rs.getString("Status");
+			// o.TotalCost = 520.20;
+			o.BillingAddress = rs.getString("BillingAddress");
+			o.BillingInfo	 = rs.getString("BillingInfo");
+			o.ShippingAddress= rs.getString("ShippingAddress");
+	    }
+	    rs.close();
 		LineItem li = new LineItem();
 		li.Order = o;
 		li.PricePaid = 540.00;
@@ -90,7 +119,9 @@ public class DatabaseAccess {
 		li.Product.Name = "Computer Mouse";
 		li.Quantity = 2;
 		
+		// link the LineItem[] with the Order
 		o.LineItems = new LineItem[] {li};
+		// return the Order
 		return o;
 	}
 
