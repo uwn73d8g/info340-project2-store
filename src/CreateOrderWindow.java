@@ -205,10 +205,6 @@ public class CreateOrderWindow extends JFrame {
 		    LineItem li = new LineItem();
 
 		    li.setProduct(p);
-			//LineItem li = new LineItem(p, new Order(), Integer.parseInt(jTextField1.getText()),
-              //      li.getProduct().getPrice());
-            //li.Product = p;
-			//li.setProduct(p);
 			li.setQuantity(Integer.parseInt(jTextField1.getText()));
 			li.setPricePaid(li.getProduct().getPrice());
 			jList1Model.addElement(li);
