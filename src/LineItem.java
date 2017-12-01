@@ -1,4 +1,6 @@
-
+/**
+ * This class represents a line item
+ */
 public class LineItem {
 	private Product product;
 	private Order order;
@@ -19,10 +21,10 @@ public class LineItem {
     /**
      * Constructor which takes in parameters for all the fields
      *
-     * @param product
-     * @param order
-     * @param quantity
-     * @param pricePaid
+     * @param product product object
+     * @param order order object
+     * @param quantity quantity of line item
+     * @param pricePaid price paid for line item
      */
 	public LineItem(Product product, Order order, int quantity, double pricePaid) {
 		this.product = product;
@@ -67,18 +69,38 @@ public class LineItem {
         return pricePaid;
     }
 
+    /**
+     * Sets the product for the line item
+     *
+     * @param product the product for this line item
+     */
     public void setProduct(Product product) {
         this.product = product;
     }
 
+    /**
+     * Sets the order for this line item
+     *
+     * @param order the order for the line item
+     */
     public void setOrder(Order order) {
         this.order = order;
     }
 
+    /**
+     * Sets the quantity for this line item
+     *
+     * @param quantity the quantity for the line item
+     */
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
+    /**
+     * Sets the price paid for this line item
+     *
+     * @param pricePaid the price for the line item
+     */
     public void setPricePaid(double pricePaid) {
         this.pricePaid = pricePaid;
     }
