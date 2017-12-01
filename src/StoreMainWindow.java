@@ -65,7 +65,7 @@ public class StoreMainWindow {
         		jTable1 = new JTable();
         		jScrollPane1.setViewportView(jTable1);
         		jTable1.setModel(jTable1Model);
-        		Order [] orders = DatabaseAccess.GetPendingOrders();
+        		Order [] orders = DatabaseAccess.getPendingOrders();
         		if (orders != null)
         		{
 	        		for (int i=0;i<orders.length;i++)
@@ -173,7 +173,7 @@ public class StoreMainWindow {
 			Order o = (Order) jTable1Model.getValueAt(row, 2);
 			if (o != null)
 			{
-				Order oDetails = DatabaseAccess.GetOrderDetails(o.getOrderID());
+				Order oDetails = DatabaseAccess.getOrderDetails(o.getOrderID());
 				new OrderDetailsWindow(oDetails);
 			}	
 		}

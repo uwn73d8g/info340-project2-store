@@ -287,7 +287,7 @@ public class OrderDetailsWindow  {
 		if (row >= 0)
 		{
 			Product p = (Product) jTable1Model.getValueAt(row, 0);
-			Product pDetails = DatabaseAccess.GetProductDetails(p.getProductID());
+			Product pDetails = DatabaseAccess.getProductDetails(p.getProductID());
 			new ProductDetailsWindow(pDetails);
 		}
 	}

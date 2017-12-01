@@ -52,7 +52,7 @@ public class DatabaseAccess {
     }
 	
 
-	public static Order [] GetPendingOrders(){
+	public static Order [] getPendingOrders(){
 		// TODO:  Query the database and retrieve the information.
 		// resultset.findcolumn(string col)
 
@@ -78,7 +78,7 @@ public class DatabaseAccess {
 		return new Order[]{};
 	}
 	
-	public static Product[] GetProducts(){
+	public static Product[] getProducts(){
 	    ResultSet result = null;
 
         List<Product> prod = new ArrayList<Product>();
@@ -105,7 +105,7 @@ public class DatabaseAccess {
         return prod.toArray(new Product[prod.size()]);
 	}
 
-	public static Order GetOrderDetails(int OrderID) {
+	public static Order getOrderDetails(int OrderID) {
 		// TODO:  Query the database to get the flight information as well as all 
 		// the reservations.
 		
@@ -132,7 +132,7 @@ public class DatabaseAccess {
      * @return a Product object from the query or if the product id does
      *         not exist then null is returned
      */
-	public static Product GetProductDetails (int productID) {
+	public static Product getProductDetails (int productID) {
         Product p = null;
 
         try{
@@ -162,7 +162,7 @@ public class DatabaseAccess {
         return null;
 	}
 	
-	public static Customer[] GetCustomers () {
+	public static Customer[] getCustomers () {
 	    ResultSet result = null;
 	    List<Customer> custList = new ArrayList<Customer>();
 		try{
@@ -187,7 +187,7 @@ public class DatabaseAccess {
 
 	}
 	
-	public static Order[] GetCustomerOrders (Customer c) {
+	public static Order[] getCustomerOrders (Customer c) {
 	    ResultSet result = null;
 	    int customerId = c.getCustomerID();
 	    List<Order> orders = new ArrayList<Order>();
@@ -217,7 +217,7 @@ public class DatabaseAccess {
         return orders.toArray(new Order[orders.size()]);
 	}
 	
-	public static Product [] SearchProductReviews(String query) {
+	public static Product [] searchProductReviews(String query) {
 
 		// DUMMY VALUES
 		Product p = new Product(1, 10, "Monitor, 19 in", "A great monitor",
@@ -225,7 +225,7 @@ public class DatabaseAccess {
 		return new Product [] {p} ;
 	}
 	                    
-	public static void MakeOrder(Customer c, LineItem [] LineItems) {
+	public static void makeOrder(Customer c, LineItem [] LineItems) {
 		// TODO: Insert data into your database.
 		// Show an error message if you can not make the reservation.
 		

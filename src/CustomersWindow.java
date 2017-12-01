@@ -81,7 +81,7 @@ public class CustomersWindow extends JFrame{
 				}
 				{
 					ComboBoxModel jComboBox1Model = 
-						new DefaultComboBoxModel( DatabaseAccess.GetCustomers());
+						new DefaultComboBoxModel( DatabaseAccess.getCustomers());
 					jComboBox1 = new JComboBox();
 					jPanel1.add(jComboBox1);
 					jComboBox1.setModel(jComboBox1Model);
@@ -129,7 +129,7 @@ public class CustomersWindow extends JFrame{
 			this.jTable1Model.setRowCount(0);
 		
 			DateFormat df = DateFormat.getDateTimeInstance();
-			Order [] orders = DatabaseAccess.GetCustomerOrders(c);
+			Order [] orders = DatabaseAccess.getCustomerOrders(c);
 			if (orders!= null)
 			{
 				for (int i=0;i<orders.length;i++)
@@ -153,7 +153,7 @@ public class CustomersWindow extends JFrame{
 		if (row >= 0)
 		{
 			Order o = (Order) jTable1Model.getValueAt(row, 1);
-			Order oDetail = DatabaseAccess.GetOrderDetails(o.getOrderID());
+			Order oDetail = DatabaseAccess.getOrderDetails(o.getOrderID());
 			new OrderDetailsWindow(oDetail);
 		}
 	}

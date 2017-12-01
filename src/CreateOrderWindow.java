@@ -105,7 +105,7 @@ public class CreateOrderWindow extends JFrame {
 	private JComboBox getJComboBox1() {
 		if(jComboBox1 == null) {
 			ComboBoxModel jComboBox1Model = 
-				new DefaultComboBoxModel( DatabaseAccess.GetCustomers());
+				new DefaultComboBoxModel( DatabaseAccess.getCustomers());
 			jComboBox1 = new JComboBox();
 			jComboBox1.setModel(jComboBox1Model);
 		}
@@ -144,7 +144,7 @@ public class CreateOrderWindow extends JFrame {
 		if(jComboBox2 == null) {
 			ComboBoxModel jComboBox2Model = 
 				new DefaultComboBoxModel(
-						DatabaseAccess.GetProducts());
+						DatabaseAccess.getProducts());
 			jComboBox2 = new JComboBox();
 			jComboBox2.setModel(jComboBox2Model);
 		}
@@ -245,7 +245,7 @@ public class CreateOrderWindow extends JFrame {
 			LineItems[i]=(LineItem)jList1Model.getElementAt(i);			
 		}
 		
-		DatabaseAccess.MakeOrder(c, LineItems);
+		DatabaseAccess.makeOrder(c, LineItems);
 		
 		this.dispose();
 	}

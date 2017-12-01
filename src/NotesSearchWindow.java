@@ -103,7 +103,7 @@ public class NotesSearchWindow extends JFrame{
 	private void jButton1ActionPerformed(ActionEvent evt) {
 		this.jTable1Model.setRowCount(0);
 			
-		Product [] products  = DatabaseAccess.SearchProductReviews(jTextField1.getText());
+		Product [] products  = DatabaseAccess.searchProductReviews(jTextField1.getText());
 		if (products != null)
 		{
 			for (int i=0;i<products.length;i++)
@@ -149,7 +149,7 @@ public class NotesSearchWindow extends JFrame{
 		if (row >= 0)
 		{
 			Product p = (Product) jTable1Model.getValueAt(row, 1);
-			Product pDetails = DatabaseAccess.GetProductDetails(p.getProductID());
+			Product pDetails = DatabaseAccess.getProductDetails(p.getProductID());
 			new ProductDetailsWindow(pDetails);
 		}
 	}
