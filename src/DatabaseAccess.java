@@ -1,3 +1,5 @@
+import com.sun.org.apache.regexp.internal.RE;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -151,11 +153,11 @@ public class DatabaseAccess {
             ResultSet result = stmt.executeQuery();
             stmt.clearParameters();
 
-            // TODO: Update the user commments at the end
             while (result.next()) {
                 p = new Product(productID, result.getInt("QtyInStock"),
                         result.getString("Name"), result.getString("Description"),
-                        result.getDouble("Price"), 0, null);
+                        result.getDouble("Price"), 0,
+                        (String[])result.getArray("Comment").getArray());
             }
 
             return p;
@@ -240,13 +242,41 @@ public class DatabaseAccess {
 
         return orders.toArray(new Order[orders.size()]);
 	}
-	
-	public static Product [] searchProductReviews(String query) {
 
-		// DUMMY VALUES
-		Product p = new Product(1, 10, "Monitor, 19 in", "A great monitor",
-                196, 0.7, null);
-		return new Product [] {p} ;
+    /**
+     * Gets all of the matching products given a user supplied
+     * search query using SQL on the db
+     *
+     * @param query the user entered search term
+     * @return an array of matching products for the query
+     *         or if there are none then the array will be empty
+     */
+	public static Product[] searchProductReviews(String query) {
+        ResultSet result = null;
+        List<Product> products = new ArrayList<Product>();
+
+	    try{
+	        DatabaseAccess.open();
+	        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM ProductComments pc, Products p " +
+                    "WHERE pc.Comment LIKE '%'?'%' AND p.id = pc.ProductId");
+	        stmt.setString(1, query);
+	        result = stmt.executeQuery();
+	        stmt.clearParameters();
+
+	        while (result.next()){
+	            products.add(new Product(result.getInt("ProductId"), result.getInt("QtyInStock"),
+                        result.getString("Name"), result.getString("Description"),
+                        result.getDouble("Price"), 0,
+                        (String[])result.getArray("Comment").getArray()));
+            }
+        }
+        catch (SQLException e){
+	        e.printStackTrace();
+        }
+        finally {
+            DatabaseAccess.close();
+        }
+        return products.toArray(new Product[products.size()]);
 	}
 	                    
 	public static void makeOrder(Customer c, LineItem [] lineItems) {
