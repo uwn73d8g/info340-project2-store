@@ -154,10 +154,11 @@ public class DatabaseAccess {
             stmt.clearParameters();
 
             while (result.next()) {
+
                 p = new Product(productID, result.getInt("QtyInStock"),
                         result.getString("Name"), result.getString("Description"),
                         result.getDouble("Price"), 0,
-                        (String[])result.getArray("Comment").getArray());
+                        new String[]{result.getString("Comment")});
             }
 
             return p;
@@ -259,7 +260,7 @@ public class DatabaseAccess {
 	        DatabaseAccess.open();
 	        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM ProductComments pc, Products p " +
                     "WHERE pc.Comment LIKE ? AND p.id = pc.ProductId");
-	        stmt.setString(1, "'%" + query + "%'");
+	        stmt.setString(1, "%" + query + "%");
 	        result = stmt.executeQuery();
 	        stmt.clearParameters();
 
@@ -267,7 +268,7 @@ public class DatabaseAccess {
 	            products.add(new Product(result.getInt("ProductId"), result.getInt("QtyInStock"),
                         result.getString("Name"), result.getString("Description"),
                         result.getDouble("Price"), 0,
-                        (String[])result.getArray("Comment").getArray()));
+                        new String[]{result.getString("Comment")}));
             }
         }
         catch (SQLException e){
@@ -280,10 +281,49 @@ public class DatabaseAccess {
 	}
 	                    
 	public static void makeOrder(Customer c, LineItem [] lineItems) {
-		// TODO: Insert data into your database.
-		// Show an error message if you can not make the reservation.
-		
-		JOptionPane.showMessageDialog(null, "Create order for " + c.getName() + " for " + Integer.toString(lineItems.length) + " items.");
+
+	    boolean orderSuccess = true;
+
+        try{
+	        DatabaseAccess.open();
+
+	        int qtyRequested = 0;
+            for (int k = 0; k < lineItems.length; k++){
+                qtyRequested = lineItems[k].getQuantity();
+
+                int productId = lineItems[k].getProduct().getProductID();
+
+                PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products p " +
+                        "WHERE p.id = ?");
+                stmt.setInt(1, productId);
+
+                ResultSet result = stmt.executeQuery();
+
+                if (result.getInt("QtyInStock") >= qtyRequested){
+
+                    //TODO: INSERT INTO DB HERE AND UPDATE QUANTITIES
+
+                }
+                else {
+                    orderSuccess = false;
+                }
+
+            }
+        }
+        catch (SQLException e){
+	        e.printStackTrace();
+        }
+        finally {
+            DatabaseAccess.close();
+        }
+
+        if (orderSuccess){
+            JOptionPane.showMessageDialog(null, "Create order for " + c.getName() + " for " +
+                    Integer.toString(lineItems.length) + " items.");
+        }
+        else {
+            //TODO: SHOW ERROR MESSAGE HERE
+        }
 	}
 
     /** Puts the connection into a new transaction. */
