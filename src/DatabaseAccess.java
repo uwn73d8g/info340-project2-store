@@ -77,7 +77,14 @@ public class DatabaseAccess {
 	    order.close();*/
 		return new Order[]{};
 	}
-	
+
+    /**
+     * Gets all of the products currently being stored in the database
+     * by running a SQL query
+     *
+     * @return an array of all of the products in the database and if
+     *         there are no products then the array will be empty
+     */
 	public static Product[] getProducts(){
 	    ResultSet result = null;
 
@@ -161,8 +168,16 @@ public class DatabaseAccess {
         }
         return null;
 	}
-	
-	public static Customer[] getCustomers () {
+
+    /**
+     * Gets all of the customers that are in the database
+     * by running a SQL query
+     *
+     * @return an array of all the customers currently in the
+     *         database and if there are no customers then
+     *         the array will be empty
+     */
+	public static Customer[] getCustomers() {
 	    ResultSet result = null;
 	    List<Customer> custList = new ArrayList<Customer>();
 		try{
@@ -186,7 +201,16 @@ public class DatabaseAccess {
         return custList.toArray(new Customer[custList.size()]);
 
 	}
-	
+
+    /**
+     * Gets all of the orders placed by the specified customer
+     * by running a SQL query against the database
+     *
+     * @param c the customer whose orders to search for
+     * @return an array of all the orders of a customer and if
+     *         the customer does not have any orders then the
+     *         array will be empty
+     */
 	public static Order[] getCustomerOrders (Customer c) {
 	    ResultSet result = null;
 	    int customerId = c.getCustomerID();
@@ -225,11 +249,11 @@ public class DatabaseAccess {
 		return new Product [] {p} ;
 	}
 	                    
-	public static void makeOrder(Customer c, LineItem [] LineItems) {
+	public static void makeOrder(Customer c, LineItem [] lineItems) {
 		// TODO: Insert data into your database.
 		// Show an error message if you can not make the reservation.
 		
-		JOptionPane.showMessageDialog(null, "Create order for " + c.getName() + " for " + Integer.toString(LineItems.length) + " items.");
+		JOptionPane.showMessageDialog(null, "Create order for " + c.getName() + " for " + Integer.toString(lineItems.length) + " items.");
 	}
 
     /** Puts the connection into a new transaction. */
