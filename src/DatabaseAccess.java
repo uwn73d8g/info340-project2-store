@@ -1,7 +1,4 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Date;
 import java.util.Properties;
 
@@ -10,23 +7,21 @@ import javax.swing.JOptionPane;
 
 public class DatabaseAccess {
 
-	private Connection conn;
+	private static Connection conn;
 
 	/** Opens a connection to the database using the given settings. */
-	public void open(Properties settings) throws Exception {
+	public static void open() throws Exception {
 		// Make sure the JDBC driver is loaded.
-		String driverClassName = settings.getProperty("store.jdbc_driver");
+		String driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 		Class.forName(driverClassName).newInstance();
 
 		// Open a connection to our database.
-		conn = DriverManager.getConnection(
-				settings.getProperty("store.url"),
-				settings.getProperty("store.sql_username"),
-				settings.getProperty("store.sql_password"));
+        conn = DriverManager.getConnection("jdbc:sqlserver://info340a-au17.ischool.uw.edu;database=P2_Group8;",
+                "ericpeng", "sql-1636149");
 	}
 
 	/** Closes the connection to the database. */
-	public void close() throws SQLException {
+	public static void close() throws SQLException {
 		conn.close();
 		conn = null;
 	}
@@ -51,17 +46,30 @@ public class DatabaseAccess {
 		return new Order [] { o };
 	}
 	
-	public static Product[] GetProducts() {
+	public static Product[] GetProducts() throws Exception{
+		PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products");
 
-		//PreparedStatement stmt =
-		// DUMMY VALUES
-		Product p = new Product();
-		p.Description = "A great monitor";
-		p.Name = "Monitor, 19 in";
-		p.InStock = 10;
-		p.Price = 196;
-		p.ProductID = 1;
-		return new Product [] { p } ;
+		ResultSet result = stmt.executeQuery();
+		ResultSetMetaData data = result.getMetaData();
+        while (result.next()){
+            for(int k = 1; k < data.getColumnCount(); k++){
+                if (k > 1) System.out.print(",  ");
+                String columnValue = result.getString(k);
+                System.out.print(columnValue + " " + data.getColumnName(k));
+            }
+            System.out.println();
+        }
+        return new Product [] {};
+	}
+
+	public static void main(String [] args) throws Exception{
+	    DatabaseAccess.open();
+	    DatabaseAccess.GetProducts();
+	    DatabaseAccess.close();
+		//DatabaseAccess access = new DatabaseAccess();
+		//access.GetProducts();
+        //access.open();
+		//DatabaseAccess.GetProducts();
 	}
 
 	public static Order GetOrderDetails(int OrderID) {
