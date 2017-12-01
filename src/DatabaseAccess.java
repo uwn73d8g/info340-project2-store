@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 
 public class DatabaseAccess {
 
-	private Connection conn;
+	private static Connection conn;
 
 	/** Opens a connection to the database using the given settings. */
 	public void open(Properties settings) throws Exception {
@@ -31,24 +31,24 @@ public class DatabaseAccess {
 		conn = null;
 	}
 	
+
 	public static Order [] GetPendingOrders() {
 		// TODO:  Query the database and retrieve the information.
 		// resultset.findcolumn(string col)
-		
-		// DUMMY DATA!
-		Order o = new Order();
-		o.OrderID = 1;
-		o.Customer = new Customer();
-		o.Customer.CustomerID = 1;
-		o.Customer.Name = "Kevin";
-		o.Customer.Email = "kevin@pathology.washington.edu";
-		o.OrderDate = new Date();
-		o.Status = "ORDERED";
-		o.TotalCost = 520.20;
-		o.BillingAddress = "1959 NE Pacific St, Seattle, WA 98195";
-		o.BillingInfo	 = "PO 12345";
-		o.ShippingAddress= "1959 NE Pacific St, Seattle, WA 98195";
-		return new Order [] { o };
+		PreparedStatement pending = conn.preparedStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
+	    ResultSet order = pending.executeQuery();
+	    Order[] a = new Order[];
+	    if (order.next()) {
+	    	while(order.next()) {
+		    	a.push(new Order(order.getInt("OrderID"), order.getDate("OrderDate"),
+		    			order.getString(order.toString()), order.getCustomer("Customer"),
+		    			order.getDouble("TotalCost"),order.getLineItem[](LineItems),
+		    			order.getString("ShippingAddress"), order.getString("BillingAddress"),
+		    			order.getString("BillingInfo")));
+		    }
+	    }
+	    order.close();
+		return a;
 	}
 	
 	public static Product[] GetProducts() {
