@@ -61,27 +61,27 @@ public class OrderDetailsWindow  {
 		DateFormat df = DateFormat.getDateTimeInstance();
 		JFrame frame = getJFrame1();
 		jFrame1.setTitle("Order Details");
-		jTextField1.setText(df.format(theOrder.OrderDate));
-		jTextField2.setText(theOrder.Customer.Name + " / " + theOrder.Customer.Email);
-		jTextField3.setText(theOrder.Status);
-		jTextField4.setText(theOrder.ShippingAddress);
-		jTextField5.setText(theOrder.BillingAddress);
-		jTextField6.setText(theOrder.BillingInfo);
-		jTextField7.setText(Double.toString(theOrder.TotalCost));
+		jTextField1.setText(df.format(theOrder.getOrderDate()));
+		jTextField2.setText(theOrder.getCustomer().getName() + " / " + theOrder.getCustomer().getEmail());
+		jTextField3.setText(theOrder.getStatus());
+		jTextField4.setText(theOrder.getShippingAddress());
+		jTextField5.setText(theOrder.getBillingAddress());
+		jTextField6.setText(theOrder.getBillingInfo());
+		jTextField7.setText(Double.toString(theOrder.getTotalCost()));
 		
-		if (theOrder.LineItems!=null)
+		if (theOrder.getLineItems()!=null)
 		{
-			for (int i=0;i<theOrder.LineItems.length;i++)
+			for (int i=0;i<theOrder.getLineItems().length;i++)
 			{
-				LineItem li = theOrder.LineItems[i];
+				LineItem li = theOrder.getLineItems()[i];
 				jTable1Model.addRow(
 						new Object[] 
 						           {
-									li.Product, 
-									li.Product.Description, 
-									Integer.toString(li.Quantity), 
-									Double.toString(li.PricePaid), 
-									Double.toString(li.PricePaid*li.Quantity)
+									li.getProduct(),
+									li.getProduct().getDescription(),
+									Integer.toString(li.getQuantity()),
+									Double.toString(li.getPricePaid()),
+									Double.toString(li.getPricePaid()*li.getQuantity())
 								}
 						);
 			}
@@ -287,7 +287,7 @@ public class OrderDetailsWindow  {
 		if (row >= 0)
 		{
 			Product p = (Product) jTable1Model.getValueAt(row, 0);
-			Product pDetails = DatabaseAccess.GetProductDetails(p.ProductID);
+			Product pDetails = DatabaseAccess.GetProductDetails(p.getProductID());
 			new ProductDetailsWindow(pDetails);
 		}
 	}

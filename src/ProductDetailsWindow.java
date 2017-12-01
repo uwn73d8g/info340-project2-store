@@ -48,19 +48,19 @@ public class ProductDetailsWindow  {
 	{
 		JFrame frame = getJFrame1();
 		jFrame1.setTitle("Product Details");
-		jTextField1.setText(theProduct.Name);
-		jTextField2.setText(theProduct.Description);
-		jTextField3.setText(Double.toString(theProduct.Price));
-		jTextField4.setText(Double.toString(theProduct.InStock));
+		jTextField1.setText(theProduct.getName());
+		jTextField2.setText(theProduct.getDescription());
+		jTextField3.setText(Double.toString(theProduct.getPrice()));
+		jTextField4.setText(Double.toString(theProduct.getInStock()));
 		
-		if (theProduct.UserComments!=null)
+		if (theProduct.getUserComments()!=null)
 		{
-			for (int i=0;i<theProduct.UserComments.length;i++)
+			for (int i=0;i<theProduct.getUserComments().length;i++)
 			{
 				jTable1Model.addRow(
 						new Object[] 
 						           {
-									theProduct.UserComments[i]
+									theProduct.getUserComments()[i]
 								}
 						);
 			}

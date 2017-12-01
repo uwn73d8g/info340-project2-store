@@ -111,9 +111,9 @@ public class NotesSearchWindow extends JFrame{
 				Product p = products[i];
 				jTable1Model.addRow(
 							new Object[] { 
-								p.Relavance,
+								p.getRelevance(),
 								p,
-								Double.toString(p.Price)
+								Double.toString(p.getPrice())
 							}
 						);
 			}
@@ -149,7 +149,7 @@ public class NotesSearchWindow extends JFrame{
 		if (row >= 0)
 		{
 			Product p = (Product) jTable1Model.getValueAt(row, 1);
-			Product pDetails = DatabaseAccess.GetProductDetails(p.ProductID);
+			Product pDetails = DatabaseAccess.GetProductDetails(p.getProductID());
 			new ProductDetailsWindow(pDetails);
 		}
 	}

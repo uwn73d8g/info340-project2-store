@@ -1,11 +1,40 @@
 
 public class Customer {
-	public int CustomerID;
-	public String Name;
-	public String Email;
-	
-	public String toString()
-	{
-		return Name;
+	private int customerID;
+	private String name, email;
+
+    public Customer(int customerID, String name, String email) {
+        this.customerID = customerID;
+        this.name = name;
+        this.email = email;
+    }
+
+    public int getCustomerID() {
+        return customerID;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setCustomerID(int customerID) {
+        this.customerID = customerID;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    @Override
+    public String toString() {
+		return this.name;
 	}
 }

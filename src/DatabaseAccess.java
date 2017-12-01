@@ -1,5 +1,7 @@
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import javax.swing.JOptionPane;
@@ -27,23 +29,30 @@ public class DatabaseAccess {
 	}
 	
 
-	public static Order [] GetPendingOrders() {
+	public static Order [] GetPendingOrders(){
 		// TODO:  Query the database and retrieve the information.
 		// resultset.findcolumn(string col)
-		PreparedStatement pending = conn.preparedStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
-	    ResultSet order = pending.executeQuery();
-	    Order[] a = new Order[];
+
+		try {
+            PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
+            ResultSet order = pending.executeQuery();
+        }
+        catch(SQLException e){
+
+        }
+	    /*Order[] a = new Order[];
 	    if (order.next()) {
 	    	while(order.next()) {
-		    	a.push(new Order(order.getInt("OrderID"), order.getDate("OrderDate"),
+	    	    a.
+		    	a.(new Order(order.getInt("OrderID"), order.getDate("OrderDate"),
 		    			order.getString(order.toString()), order.getCustomer("Customer"),
 		    			order.getDouble("TotalCost"),order.getLineItem[](LineItems),
 		    			order.getString("ShippingAddress"), order.getString("BillingAddress"),
 		    			order.getString("BillingInfo")));
 		    }
 	    }
-	    order.close();
-		return a;
+	    order.close();*/
+		return new Order[]{};
 	}
 	
 	public static Product[] GetProducts() throws Exception{
@@ -51,14 +60,20 @@ public class DatabaseAccess {
 
 		ResultSet result = stmt.executeQuery();
 		ResultSetMetaData data = result.getMetaData();
-        while (result.next()){
+
+        List<Product> prod = new ArrayList<Product>();
+
+        while(result.next()){
+            //prod.add(new Product(result.getInt("ID")))
+        }
+        /*while (result.next()){
             for(int k = 1; k < data.getColumnCount(); k++){
                 if (k > 1) System.out.print(",  ");
                 String columnValue = result.getString(k);
                 System.out.print(columnValue + " " + data.getColumnName(k));
             }
             System.out.println();
-        }
+        }*/
         return new Product [] {};
 	}
 
@@ -77,40 +92,27 @@ public class DatabaseAccess {
 		// the reservations.
 		
 		// DUMMY DATA FOLLOWS
-		Order o = new Order();
-		o.OrderID = 1;
-		o.Customer = new Customer();
-		o.Customer.CustomerID = 1;
-		o.Customer.Name = "Kevin";
-		o.Customer.Email = "kevin@pathology.washington.edu";
-		o.OrderDate = new Date();
-		o.Status = "ORDERED";
-		o.TotalCost = 520.20;
-		o.BillingAddress = "1959 NE Pacific St, Seattle, WA 98195";
-		o.BillingInfo	 = "PO 12345";
-		o.ShippingAddress= "1959 NE Pacific St, Seattle, WA 98195";
 
-		LineItem li = new LineItem();
-		li.Order = o;
-		li.PricePaid = 540.00;
-		li.Product = new Product();
-		li.Product.Description = "A great product.";
-		li.Product.Name = "Computer Mouse";
-		li.Quantity = 2;
-		
-		o.LineItems = new LineItem[] {li};
+        Customer cust = new Customer(1, "Kevin", "kevin@pathology.washington.edu");
+        Order o = new Order(1, new Date(), "ORDERED", cust, 520.20,
+                null, "1959 NE Pacific St, Seattle, WA 98195",
+                "1959 NE Pacific St, Seattle, WA 98195",
+                "PO 12345");
+
+		Product p = new Product(1, 2, "Computer Mouse",
+                "A great product", 0, 0, null);
+		LineItem li = new LineItem(p, o, 2, 540);
+
+		o.setLineItems(new LineItem[]{li});
 		return o;
 	}
 
 	public static Product GetProductDetails (int ProductID) {
-		Product p = new Product();
-		p.Description = "A great monitor";
-		p.Name = "Monitor, 19 in";
-		p.InStock = 10;
-		p.Price = 196;
-		p.ProductID = ProductID;
-		p.UserComments = new String [] { "I bought this product last year and it's still the best monitor I've had.", "After 6 months the color started going out, not sure if it was just mine or all of them" };
-		
+
+        Product p = new Product(1, 10, "Monitor, 19 in", "A great monitor",
+                196, 0.7,
+                new String [] { "I bought this product last year and it's still the best monitor I've had.",
+                        "After 6 months the color started going out, not sure if it was just mine or all of them" });
 		return p;
 		
 	}
@@ -119,57 +121,41 @@ public class DatabaseAccess {
 		// TODO:  Query the database to retrieve a list of customers.
 		
 		// DUMMY VALUES FOLLOW
-		Customer c1 = new Customer();
-		c1.CustomerID = 1;
-		c1.Email = "k@u";
-		c1.Name = "Kevin Fleming";
-		
-		Customer c2 = new Customer();
-		c2.CustomerID = 2;
-		c2.Email = "k@u";
-		c2.Name = "Niki Cassaro";
+		Customer c1 = new Customer(1, "Kevin Fleming", "k@u");
 
-		Customer c3 = new Customer();
-		c3.CustomerID = 3;
-		c3.Email = "k@u";
-		c3.Name = "Ava Fleming";
+		Customer c2 = new Customer(2, "Niki Cassaro", "k@u");
+
+		Customer c3 = new Customer(3, "Ava Fleming", "k@u");
 		
 		return new Customer [] { c1, c2, c3 };
 	}
 	
 	public static Order [] GetCustomerOrders (Customer c) {
-		Order o = new Order();
-		o.OrderID = 1;
-		o.Customer = new Customer();
-		o.Customer.CustomerID = 1;
-		o.Customer.Name = "Kevin";
-		o.Customer.Email = "kevin@pathology.washington.edu";
-		o.OrderDate = new Date();
-		o.Status = "ORDERED";
-		o.TotalCost = 520.20;
-		o.BillingAddress = "1959 NE Pacific St, Seattle, WA 98195";
-		o.BillingInfo	 = "PO 12345";
-		o.ShippingAddress= "1959 NE Pacific St, Seattle, WA 98195";
+
+	    // TODO: Get the Orders
+
+        // DUMMY VALUES FOLLOW
+	    Customer cust = new Customer(1, "Kevin", "kevin@pathology.washington.edu");
+	    Order o = new Order(1, new Date(), "ORDERED", cust, 520.20,
+                null, "1959 NE Pacific St, Seattle, WA 98195",
+                "1959 NE Pacific St, Seattle, WA 98195",
+                "PO 12345");
 
 		return new Order [] { o };
 	}
 	
 	public static Product [] SearchProductReviews(String query) {
+
 		// DUMMY VALUES
-		Product p = new Product();
-		p.Description = "A great monitor";
-		p.Name = "Monitor, 19 in";
-		p.InStock = 10;
-		p.Price = 196;
-		p.ProductID = 1;
-		p.Relavance = 0.7;
-		return new Product [] { p} ;
+		Product p = new Product(1, 10, "Monitor, 19 in", "A great monitor",
+                196, 0.7, null);
+		return new Product [] {p} ;
 	}
 	                    
 	public static void MakeOrder(Customer c, LineItem [] LineItems) {
 		// TODO: Insert data into your database.
 		// Show an error message if you can not make the reservation.
 		
-		JOptionPane.showMessageDialog(null, "Create order for " + c.Name + " for " + Integer.toString(LineItems.length) + " items.");
+		JOptionPane.showMessageDialog(null, "Create order for " + c.getName() + " for " + Integer.toString(LineItems.length) + " items.");
 	}
 }

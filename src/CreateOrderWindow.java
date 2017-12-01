@@ -200,12 +200,17 @@ public class CreateOrderWindow extends JFrame {
 	
 	private void jButton1ActionPerformed(ActionEvent evt) {
 		Product p = (Product) jComboBox2.getSelectedItem();
-		if (p != null)
-		{
-			LineItem li = new LineItem();
-			li.Product = p;
-			li.Quantity = Integer.parseInt(jTextField1.getText());
-			li.PricePaid = li.Product.Price;
+
+		if (p != null) {
+		    LineItem li = new LineItem();
+
+		    li.setProduct(p);
+			//LineItem li = new LineItem(p, new Order(), Integer.parseInt(jTextField1.getText()),
+              //      li.getProduct().getPrice());
+            //li.Product = p;
+			//li.setProduct(p);
+			li.setQuantity(Integer.parseInt(jTextField1.getText()));
+			li.setPricePaid(li.getProduct().getPrice());
 			jList1Model.addElement(li);
 		}
 	}

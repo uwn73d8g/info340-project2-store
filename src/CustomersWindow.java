@@ -137,11 +137,11 @@ public class CustomersWindow extends JFrame{
 					Order o = orders[i];
 					jTable1Model.addRow(
 								new Object[] { 
-									df.format(o.OrderDate),
+									df.format(o.getOrderDate()),
 									o,
-									o.TotalCost,
-									o.ShippingAddress,
-									o.BillingAddress}
+									o.getTotalCost(),
+									o.getShippingAddress(),
+									o.getBillingAddress()}
 							);
 				}
 			}
@@ -153,7 +153,7 @@ public class CustomersWindow extends JFrame{
 		if (row >= 0)
 		{
 			Order o = (Order) jTable1Model.getValueAt(row, 1);
-			Order oDetail = DatabaseAccess.GetOrderDetails(o.OrderID);
+			Order oDetail = DatabaseAccess.GetOrderDetails(o.getOrderID());
 			new OrderDetailsWindow(oDetail);
 		}
 	}

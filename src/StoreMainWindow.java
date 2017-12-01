@@ -20,7 +20,7 @@ import java.text.DateFormat;
 * THIS MACHINE, SO JIGLOO OR THIS CODE CANNOT BE USED
 * LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE.
 */
-public class StoretMainWindow {
+public class StoreMainWindow {
 	static private JTable jTable1;
 	static private JPanel jPanel1;
 	static private JScrollPane jScrollPane1;
@@ -72,11 +72,11 @@ public class StoretMainWindow {
 	        		{
 	        			Order o = orders[i];
 	        			jTable1Model.addRow(new Object[] {
-	        					df.format(o.OrderDate),
-	        					o.Customer.Name,
+	        					df.format(o.getOrderDate()),
+	        					o.getCustomer().getName(),
 	        					o,
-	        					Double.toString(o.TotalCost),
-	        					o.ShippingAddress
+	        					Double.toString(o.getTotalCost()),
+	        					o.getShippingAddress()
 	        				});
 	        		}
         		}
@@ -171,7 +171,7 @@ public class StoretMainWindow {
 			Order o = (Order) jTable1Model.getValueAt(row, 2);
 			if (o != null)
 			{
-				Order oDetails = DatabaseAccess.GetOrderDetails(o.OrderID);
+				Order oDetails = DatabaseAccess.GetOrderDetails(o.getOrderID());
 				new OrderDetailsWindow(oDetails);
 			}	
 		}
