@@ -54,31 +54,56 @@ public class DatabaseAccess {
     }
 	
 
-	public static Order [] getPendingOrders(){
+	public static Order [] getPendingOrders() throws SQLException {
 		// TODO:  Query the database and retrieve the information.
 		// resultset.findcolumn(string col)
 
-		//try {
-            //PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
-            //ResultSet order = pending.executeQuery();
-        //}
-        //catch(SQLException e){
+		// try {
+//             PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
+//             ResultSet order = pending.executeQuery();
+//         }
+//         catch(SQLException e){
+// 
+//         }
+        // TODO:  Query the database and retrieve the information.
+        // resultset.findcolumn(string col)
+        //PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
+                 List<Order> orders = new ArrayList<Order>();
 
-        //}
-	    /*Order[] a = new Order[];
-	    if (order.next()) {
-	    	while(order.next()) {
-	    	    a.
-		    	a.(new Order(order.getInt("OrderID"), order.getDate("OrderDate"),
-		    			order.getString(order.toString()), order.getCustomer("Customer"),
-		    			order.getDouble("TotalCost"),order.getLineItem[](LineItems),
-		    			order.getString("ShippingAddress"), order.getString("BillingAddress"),
-		    			order.getString("BillingInfo")));
-		    }
-	    }
-	    order.close();*/
-		return new Order[]{};
-	}
+        PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o JOIN Customers c" +
+                   "ON o.CustomerId = c.id And o.Status = 'Processing' LEFT JOIN LineItems l ON l.OrderId = o.id");
+
+         ResultSet result = pending.executeQuery();
+           while(result.next()) {
+               orders.add(getOrderDetails(result.getInt("id")));
+               }
+               //create customer object
+//             Customer c = new Customer(order.getInt("CustomerId"), order.getString("Name"), order.getString("Email"));
+//             //create lineItem object
+//             LineItem l = null;
+//             if (order.getInt("OrderId")){ //if it is not null
+//                l = new LineItem(this.product = null;
+//         this.order = null;
+//         this.quantity = 0;
+//         this.pricePaid = 0.0;);
+//             }
+//             
+//             PreparedStatement product = conn.prepareStatement("SELECT * FROM Products p, Customers c, LineItems l\n" +
+//             ResultSet pro = product.executeQuery();
+//             Product p = new Product(order.getInt("ProductId"), order);
+// 
+//    		   o = new Order(order.getInt("OrderID"), order.getDate("OrderDate"),
+//                     order.getString("Status"), c,
+//                     0.0 , null,
+//                     order.getString("ShippingAddress"), order.getString("BillingAddress"),
+//                     order.getString("BillingInfo")));
+//             }
+//          
+         result.close();
+         
+          return orders.toArray(new Order[orders.size()]);
+
+     }
 
     /**
      * Gets all of the products currently being stored in the database
@@ -308,8 +333,24 @@ public class DatabaseAccess {
 
                 if (qtyAvailable >= qtyRequested){
                     System.out.println("Can be created");
-                    //TODO: INSERT INTO DB HERE AND UPDATE QUANTITIES
+                    // TODO: INSERT INTO DB HERE AND UPDATE QUANTITIES
+                    PreparedStatement p = conn.prepareStatement("SELECT * FROM Customers c " +
+                        "WHERE c.id = ?"); 
+                           p.setInt(1, c.getCustomerID());
+                           ResultSet res = p.executeQuery();
+                           PreparedStatement pre = conn.prepareStatement("SELECT COUNT(*) FROM Orders");
+                           ResultSet count = pre.executeQuery();
+                           int id =  Integer.parseInt(count.toString());
+                           int cid = res.getInt("CustomerId");
 
+                    
+                    PreparedStatement preparedStmt = conn.prepareStatement("INSERT INTO Orders" + "VALUES (id, cid,'Processing', null, null, null)");
+                    preparedStmt.execute();
+                    PreparedStatement updateProduct = conn.prepareStatement("update Products set QtyInStock = ? where id = ?");
+                    updateProduct.setInt(1, qtyAvailable - qtyRequested);
+                    updateProduct.setInt(2, productId);
+                    updateProduct.executeUpdate();
+                    
                 }
                 else {
                     System.out.println("NO ORDER");
@@ -331,6 +372,7 @@ public class DatabaseAccess {
         }
         else {
             //TODO: SHOW ERROR MESSAGE HERE
+            
         }
 	}
 
