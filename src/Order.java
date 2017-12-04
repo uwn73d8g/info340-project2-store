@@ -34,7 +34,7 @@ public class Order {
 		this.billingAddress = billingAddress;
 		this.billingInfo = billingInfo;
 	}
-
+         
     public int getOrderID() {
         return orderID;
     }

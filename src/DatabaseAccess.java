@@ -139,26 +139,45 @@ public class DatabaseAccess {
         return prod.toArray(new Product[prod.size()]);
 	}
 
-	public static Order getOrderDetails(int OrderID) {
-		// TODO:  Query the database to get the flight information as well as all 
-		// the reservations.
+	public static Order getOrderDetails(int OrderID) throws SQLException {
+		// get the order details and store them in a Order object
+		Order o = null;
+		String query = "SELECT * FROM Order o\n"  +
+                   "JOIN Customer c ON o.CustomerId = c.id\n" + "WHERE o.id = ?";
+		PreparedStatement searchOrder = conn.prepareStatement(query);
+	   searchOrder.setInt(1, OrderID);
+	   ResultSet rs = searchOrder.executeQuery();
+	   while (rs.next()) {
+			Customer cus = new Customer(rs.getInt("CustomerId"), 
+                                     rs.getString("Name"), rs.getString("Email"));
+			o = new Order(OrderID, new Date(), rs.getString("Status"),
+                       cus, 0.0, null, rs.getString("ShippingAddress"), 
+                       rs.getString("BillingAddress"), rs.getString("BillingInfo"));
+			// o.TotalCost = 520.20;
+	    }
+	    rs.close();
 		
-		// DUMMY DATA FOLLOWS
-
-        Customer cust = new Customer(1, "Kevin", "kevin@pathology.washington.edu");
-        Order o = new Order(1, new Date(), "ORDERED", cust, 520.20,
-                null, "1959 NE Pacific St, Seattle, WA 98195",
-                "1959 NE Pacific St, Seattle, WA 98195",
-                "PO 12345");
-
-		Product p = new Product(1, 2, "Computer Mouse",
-                "A great product", 0, 0, null);
-		LineItem li = new LineItem(p, o, 2, 540);
-
-		o.setLineItems(new LineItem[]{li});
+		// get all the LineItems and store them in a LineItem[]
+	    ArrayList<LineItem> l = new ArrayList<LineItem>();
+		 String query2 = "SELECT * FROM LineItem l\n"  +
+                      "WHERE OrderId = ?";
+		 PreparedStatement searchLineItem = conn.prepareStatement(query2);
+	    searchLineItem.setInt(1, OrderID);
+	    ResultSet items = searchLineItem.executeQuery();
+	    double total = 0.0;
+	    while (items.next()) {
+			double paid = items.getDouble("PricePaid");
+         int quantity = items.getInt("Quantity");
+			total += paid * quantity;
+         Product pro = getProductDetails (items.getInt("ProductId"));
+         l.add(new LineItem(pro, o, quantity, paid));
+       }
+	    rs.close();
+       o.setTotalCost(total);
+       o.setLineItems(l.toArray(new LineItem[l.size()]));
 		return o;
 	}
-
+      
     /**
      * Gets the product details by running a SQL query on the database
      *
