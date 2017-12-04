@@ -54,29 +54,29 @@ public class DatabaseAccess {
     }
 	
 
-	public static Order [] getPendingOrders() throws SQLException {
+	public static Order [] getPendingOrders() {
 		// TODO:  Query the database and retrieve the information.
 		// resultset.findcolumn(string col)
+        ResultSet result = null;
+        List<Order> orders = new ArrayList<Order>();
 
-		// try {
-//             PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
-//             ResultSet order = pending.executeQuery();
-//         }
-//         catch(SQLException e){
-// 
-//         }
-        // TODO:  Query the database and retrieve the information.
-        // resultset.findcolumn(string col)
-        //PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o WHERE o.Status = 'Processing'");
-                 List<Order> orders = new ArrayList<Order>();
+        try {
+   
+           PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o JOIN Customers c" +
+                      "ON o.CustomerId = c.id And o.Status = 'Processing' LEFT JOIN LineItems l ON l.OrderId = o.id");
+   
+           result = pending.executeQuery();
+              while(result.next()) {
+                  orders.add(getOrderDetails(result.getInt("id")));
+                  }
+         }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+            DatabaseAccess.close();
+        }
 
-        PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o JOIN Customers c" +
-                   "ON o.CustomerId = c.id And o.Status = 'Processing' LEFT JOIN LineItems l ON l.OrderId = o.id");
-
-         ResultSet result = pending.executeQuery();
-           while(result.next()) {
-               orders.add(getOrderDetails(result.getInt("id")));
-               }
                //create customer object
 //             Customer c = new Customer(order.getInt("CustomerId"), order.getString("Name"), order.getString("Email"));
 //             //create lineItem object
@@ -99,7 +99,6 @@ public class DatabaseAccess {
 //                     order.getString("BillingInfo")));
 //             }
 //          
-         result.close();
          
           return orders.toArray(new Order[orders.size()]);
 
@@ -139,42 +138,51 @@ public class DatabaseAccess {
         return prod.toArray(new Product[prod.size()]);
 	}
 
-	public static Order getOrderDetails(int OrderID) throws SQLException {
+	public static Order getOrderDetails(int OrderID) {
 		// get the order details and store them in a Order object
 		Order o = null;
-		String query = "SELECT * FROM Order o\n"  +
-                   "JOIN Customer c ON o.CustomerId = c.id\n" + "WHERE o.id = ?";
-		PreparedStatement searchOrder = conn.prepareStatement(query);
-	   searchOrder.setInt(1, OrderID);
-	   ResultSet rs = searchOrder.executeQuery();
-	   while (rs.next()) {
-			Customer cus = new Customer(rs.getInt("CustomerId"), 
-                                     rs.getString("Name"), rs.getString("Email"));
-			o = new Order(OrderID, new Date(), rs.getString("Status"),
-                       cus, 0.0, null, rs.getString("ShippingAddress"), 
-                       rs.getString("BillingAddress"), rs.getString("BillingInfo"));
-			// o.TotalCost = 520.20;
-	    }
-	    rs.close();
-		
-		// get all the LineItems and store them in a LineItem[]
-	    ArrayList<LineItem> l = new ArrayList<LineItem>();
-		 String query2 = "SELECT * FROM LineItem l\n"  +
-                      "WHERE OrderId = ?";
-		 PreparedStatement searchLineItem = conn.prepareStatement(query2);
-	    searchLineItem.setInt(1, OrderID);
-	    ResultSet items = searchLineItem.executeQuery();
-	    double total = 0.0;
-	    while (items.next()) {
-			double paid = items.getDouble("PricePaid");
-         int quantity = items.getInt("Quantity");
-			total += paid * quantity;
-         Product pro = getProductDetails (items.getInt("ProductId"));
-         l.add(new LineItem(pro, o, quantity, paid));
+      try {
+   		String query = "SELECT * FROM Order o\n"  +
+                      "JOIN Customer c ON o.CustomerId = c.id\n" + "WHERE o.id = ?";
+   		PreparedStatement searchOrder = conn.prepareStatement(query);
+   	   searchOrder.setInt(1, OrderID);
+   	   ResultSet rs = searchOrder.executeQuery();
+   	   while (rs.next()) {
+   			Customer cus = new Customer(rs.getInt("CustomerId"), 
+                                        rs.getString("Name"), rs.getString("Email"));
+   			o = new Order(OrderID, new Date(), rs.getString("Status"),
+                          cus, 0.0, null, rs.getString("ShippingAddress"), 
+                          rs.getString("BillingAddress"), rs.getString("BillingInfo"));
+   			// o.TotalCost = 520.20;
+   	    }
+   	    rs.close();
+   		
+   		// get all the LineItems and store them in a LineItem[]
+   	    ArrayList<LineItem> l = new ArrayList<LineItem>();
+   		 String query2 = "SELECT * FROM LineItem l\n"  +
+                         "WHERE OrderId = ?";
+   		 PreparedStatement searchLineItem = conn.prepareStatement(query2);
+   	    searchLineItem.setInt(1, OrderID);
+   	    ResultSet items = searchLineItem.executeQuery();
+   	    double total = 0.0;
+   	    while (items.next()) {
+   			double paid = items.getDouble("PricePaid");
+            int quantity = items.getInt("Quantity");
+   			total += paid * quantity;
+            Product pro = getProductDetails (items.getInt("ProductId"));
+            l.add(new LineItem(pro, o, quantity, paid));
+          }
+   	    rs.close();
+          o.setTotalCost(total);
+          o.setLineItems(l.toArray(new LineItem[l.size()]));
        }
-	    rs.close();
-       o.setTotalCost(total);
-       o.setLineItems(l.toArray(new LineItem[l.size()]));
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+            DatabaseAccess.close();
+        }
+
 		return o;
 	}
       
@@ -391,7 +399,7 @@ public class DatabaseAccess {
         }
         else {
             //TODO: SHOW ERROR MESSAGE HERE
-            
+            JOptionPane.showMessageDialog (null, "Could not create new order", "Error", JOptionPane.ERROR_MESSAGE);
         }
 	}
 
