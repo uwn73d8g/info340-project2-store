@@ -335,16 +335,26 @@ public class DatabaseAccess {
                     ResultSet res = p.executeQuery();
                     PreparedStatement pre = conn.prepareStatement("SELECT COUNT(*) as 'id' FROM Orders");
                     ResultSet count = pre.executeQuery();
-
+                    // insertninto order table
                     PreparedStatement preparedStmt = conn.prepareStatement("INSERT INTO Orders " + "VALUES (?,'Processing', '', '', '')");
-                    //preparedStmt.setInt(1, id);
                     preparedStmt.setInt(1, c.getCustomerID());
                     preparedStmt.execute();
+                    // update product table
                     PreparedStatement updateProduct = conn.prepareStatement("update Products set QtyInStock = ? where id = ?");
                     updateProduct.setInt(1, qtyAvailable - qtyRequested);
                     updateProduct.setInt(2, productId);
                     updateProduct.executeUpdate();
-
+                    // insert into lineitems table
+                    PreparedStatement insertLI = conn.prepareStatement("INSERT INTO LineItems "  + "VALUES(?,?,?,?)");
+                    // get order id
+                    PreparedStatement orderId = conn.prepareStatement("SELECT * FROM Orders o WHERE o.CustomerId = ?");
+                    orderId.setInt(1, c.getCustomerID()); 
+                    ResultSet order = orderId.executeQuery();
+                    insertLI.setInt(1, order.getInt("id"));
+                    insertLI.setInt(2, productId);
+                    insertLI.setInt(3, qtyRequested);
+                    insertLI.setDouble(4, result.getDouble("Price") * qtyRequested);
+                    insertLI.execute();
                 } else {
                     System.out.println("NO ORDER");
                     orderSuccess = false;
