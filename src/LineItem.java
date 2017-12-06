@@ -43,6 +43,15 @@ public class LineItem {
     }
 
     /**
+     * Sets the product for the line item
+     *
+     * @param product the product for this line item
+     */
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    /**
      * Gets the Order for this line item object
      *
      * @return the Order for the line item
@@ -67,15 +76,6 @@ public class LineItem {
      */
     public double getPricePaid() {
         return pricePaid;
-    }
-
-    /**
-     * Sets the product for the line item
-     *
-     * @param product the product for this line item
-     */
-    public void setProduct(Product product) {
-        this.product = product;
     }
 
     /**

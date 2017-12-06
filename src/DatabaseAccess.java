@@ -194,7 +194,6 @@ public class DatabaseAccess {
     }
 
     public static Order getOrderDetails(int orderID) {
-        // get the order details and store them in a Order object
         Order o = null;
 
         try {
@@ -228,13 +227,14 @@ public class DatabaseAccess {
             }
 
             double total = 0;
+
             while (result.next()) {
                 boolean addNew = true;
                 double paid = result.getDouble("PricePaid");
                 int quantity = result.getInt("Quantity");
 
                 total += paid * quantity;
-                //Product pro = getProductDetails(items.getInt("ProductId"));
+
                 for (LineItem item : items){
                     if (item.getProduct().getProductID() == result.getInt("ProductId")){
                         addNew = false;
@@ -381,7 +381,6 @@ public class DatabaseAccess {
             result = stmt.executeQuery();
             stmt.clearParameters();
 
-            // TODO: Need to updated date, total cost, lineitems after other methods created
             while (result.next()) {
                 orders.add(new Order(result.getInt("id"), new Date(), result.getString("Status"),
                         c, 0, null, result.getString("ShippingAddress"),
@@ -483,7 +482,8 @@ public class DatabaseAccess {
                 if (qtyAvailable >= qtyRequested) {
                     System.out.println("Can be created");
 
-                    PreparedStatement updateStock = conn.prepareStatement("UPDATE Products SET QtyInStock = ? WHERE id = ?");
+                    PreparedStatement updateStock = conn.prepareStatement("UPDATE Products " +
+                            "SET QtyInStock = ? WHERE id = ?");
                     updateStock.setInt(1, qtyAvailable - qtyRequested);
                     updateStock.setInt(2, productId);
                     updateStock.executeUpdate();
@@ -511,8 +511,6 @@ public class DatabaseAccess {
                 info = resultSet.getString("BillingInfo");
             }
 
-            System.out.println(shipping);
-            System.out.println(billing);
             PreparedStatement stmt1 = conn.prepareStatement("INSERT INTO Orders " +
                     "VALUES (?, ?, ?, ?, ?)");
 
