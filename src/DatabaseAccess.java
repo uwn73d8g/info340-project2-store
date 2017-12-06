@@ -1,6 +1,3 @@
-import com.sun.tools.corba.se.idl.constExpr.Or;
-
-import java.io.*;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -459,8 +456,6 @@ public class DatabaseAccess {
             int qtyRequested = 0;
 
             for (int k = 0; k < lineItems.length; k++) {
-                //System.out.println(lineItems[k].getQuantity() + " " + lineItems[k].getOrder() + " " +
-                        //lineItems[k].getProduct());
                 qtyRequested = lineItems[k].getQuantity();
 
                 int productId = lineItems[k].getProduct().getProductID();
