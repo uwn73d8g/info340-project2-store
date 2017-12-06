@@ -9,6 +9,11 @@ public class Order {
 	private LineItem[] lineItems;
 	private String shippingAddress, billingAddress, billingInfo, status;
 
+
+    public Order(int orderID){
+        this.orderID = orderID;
+    }
+
     /**
      * Creates a new order object
      *
@@ -34,6 +39,7 @@ public class Order {
 		this.billingAddress = billingAddress;
 		this.billingInfo = billingInfo;
 	}
+
          
     public int getOrderID() {
         return orderID;
