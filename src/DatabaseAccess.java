@@ -278,7 +278,7 @@ public class DatabaseAccess {
      */
     public static Product getProductDetails(int productID) {
         Product p = null;
-        System.out.println(productID);
+        //System.out.println(productID);
         try {
             DatabaseAccess.open();
             DatabaseAccess.beginTransaction();
@@ -459,8 +459,8 @@ public class DatabaseAccess {
             int qtyRequested = 0;
 
             for (int k = 0; k < lineItems.length; k++) {
-                System.out.println(lineItems[k].getQuantity() + " " + lineItems[k].getOrder() + " " +
-                        lineItems[k].getProduct());
+                //System.out.println(lineItems[k].getQuantity() + " " + lineItems[k].getOrder() + " " +
+                        //lineItems[k].getProduct());
                 qtyRequested = lineItems[k].getQuantity();
 
                 int productId = lineItems[k].getProduct().getProductID();
@@ -481,7 +481,7 @@ public class DatabaseAccess {
                 }
 
                 if (qtyAvailable >= qtyRequested) {
-                    System.out.println("Can be created");
+                    //System.out.println("Can be created");
 
                     PreparedStatement updateStock = conn.prepareStatement("UPDATE Products " +
                             "SET QtyInStock = ? WHERE id = ?");
@@ -513,7 +513,7 @@ public class DatabaseAccess {
             }
 
             PreparedStatement stmt1 = conn.prepareStatement("INSERT INTO Orders " +
-                    "VALUES (?, ?, ?, ?, ?)");
+                    "VALUES (?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
 
             java.sql.Date d = new java.sql.Date(new Date().getTime());
             stmt1.setInt(1, c.getCustomerID());
@@ -524,21 +524,18 @@ public class DatabaseAccess {
 
             stmt1.execute();
 
-            PreparedStatement ps = conn.prepareStatement("SELECt o.id FROM Orders o WHERE o.CustomerID = ? " +
-                    "AND o.Status = 'Processing'");
-            ps.setInt(1, c.getCustomerID());
+            ResultSet key = stmt1.getGeneratedKeys();
 
-            ResultSet rs = ps.executeQuery();
+            int insertKey = 0;
 
-            int oId = -1;
-            while(rs.next()){
-                oId = rs.getInt("id");
+            while(key.next() && key != null){
+                insertKey = key.getInt(1);
             }
 
             for (int k = 0; k < lineItems.length; k++){
                 PreparedStatement updateLineItem = conn.prepareStatement("INSERT INTO LineItems " +
                         "VALUES (?, ?, ?, ?)");
-                updateLineItem.setInt(1, oId);
+                updateLineItem.setInt(1, insertKey);
                 updateLineItem.setInt(2, lineItems[k].getProduct().getProductID());
                 updateLineItem.setInt(3, lineItems[k].getQuantity());
                 updateLineItem.setDouble(4, lineItems[k].getProduct().getPrice() * lineItems[k].getQuantity());
