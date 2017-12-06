@@ -54,7 +54,8 @@ public class DatabaseAccess {
             DatabaseAccess.open();
             DatabaseAccess.beginTransaction();
 
-            PreparedStatement lineItem = conn.prepareStatement("SELECT p.Name, p.Description, p.QtyInStock, p.Price, " +
+            PreparedStatement lineItem = conn.prepareStatement("SELECT p.Name, p.Description," +
+                    " p.QtyInStock, p.Price, " +
                     "p.Description, l.OrderId, l.PricePaid, l.ProductId,\n" +
                     "l.Quantity, pc.Comment, o.BillingAddress, o.CustomerId,\n" +
                     "o.BillingInfo, o.id, o.ShippingAddress,\n" +
