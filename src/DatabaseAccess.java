@@ -1,10 +1,9 @@
-import com.sun.org.apache.regexp.internal.RE;
+import com.sun.tools.corba.se.idl.constExpr.Or;
 
+import java.io.*;
 import java.sql.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
-
 import javax.swing.JOptionPane;
 
 
@@ -45,41 +44,101 @@ public class DatabaseAccess {
         }
     }
 
-    /**
-     * Performs additional preparation after the connection is opened.
-     */
-    public static void prepare() throws SQLException {
-        // NOTE: We must explicitly set the isolation level to SERIALIZABLE as it
-        //       defaults to allowing non-repeatable reads.
-        beginTxnStmt = conn.prepareStatement(
-                "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; BEGIN TRANSACTION;");
-        commitTxnStmt = conn.prepareStatement("COMMIT TRANSACTION");
-        abortTxnStmt = conn.prepareStatement("ROLLBACK TRANSACTION");
-    }
-
 
     public static Order[] getPendingOrders() {
-        // TODO:  Query the database and retrieve the information.
-        // resultset.findcolumn(string col)
+
         ResultSet result = null;
         List<Order> orders = new ArrayList<Order>();
 
         try {
             DatabaseAccess.open();
-            PreparedStatement pending = conn.prepareStatement("SELECT * FROM Orders o JOIN Customers c " +
-                    "ON o.CustomerId = c.id And o.Status = 'Processing' LEFT JOIN LineItems l ON l.OrderId = o.id");
+            DatabaseAccess.beginTransaction();
 
-            result = pending.executeQuery();
-            while (result.next() && result != null) {
-                orders.add(getOrderDetails(result.getInt("id")));
+            PreparedStatement lineItem = conn.prepareStatement("SELECT p.Name, p.Description, p.QtyInStock, p.Price, " +
+                    "p.Description, l.OrderId, l.PricePaid, l.ProductId,\n" +
+                    "l.Quantity, pc.Comment, o.BillingAddress, o.CustomerId,\n" +
+                    "o.BillingInfo, o.id, o.ShippingAddress,\n" +
+                    "o.Status, o.ShippingAddress, c.Email, c.Name as 'CName'\n" +
+                    "FROM LineItems l JOIN Products p ON p.id = l.ProductId \n" +
+                    "JOIN ProductComments pc ON l.ProductId = pc.ProductId JOIN Orders o ON o.id = l.OrderId \n" +
+                    "JOIN Customers c ON c.id = o.CustomerId\n" +
+                    "WHERE o.Status = 'Processing'");
+
+            ResultSet liResult = lineItem.executeQuery();
+
+            Set<LineItem> allLineItems = new HashSet<>();
+
+            while (liResult.next()){
+
+                boolean createO = true;
+                boolean createL = true;
+
+                for (Order order : orders) {
+                    if (order.getOrderID() == liResult.getInt("OrderId")){
+                        createO = false;
+                    }
+                }
+
+                if (createO) {
+                   Order o = new Order(liResult.getInt("OrderId"), new Date(),
+                           liResult.getString("Status"),
+                            new Customer(liResult.getInt("CustomerId"),
+                                    liResult.getString("CName"),
+                                    liResult.getString("Email")),
+                           liResult.getDouble("Price") * liResult.getInt("Quantity"),
+                            new LineItem[]{}, liResult.getString("ShippingAddress"),
+                           liResult.getString("BillingAddress"),
+                            liResult.getString("BillingInfo"));
+                    orders.add(o);
+                }
+
+                for (LineItem item : allLineItems) {
+                    if (item.getOrder().getOrderID() == liResult.getInt("OrderId") &&
+                            item.getProduct().getProductID() == liResult.getInt("ProductId")){
+                        createL = false;
+                    }
+                }
+
+                if (createL) {
+                    LineItem li = new LineItem(new Product(liResult.getInt("ProductId"),
+                            liResult.getInt("QtyInStock"), liResult.getString("Name"),
+                            liResult.getString("Description"),
+                            liResult.getDouble("Price"), 0,
+                            new String[]{liResult.getString("Comment")}),
+                            new Order(liResult.getInt("OrderId")),
+                            liResult.getInt("Quantity"), liResult.getDouble("PricePaid"));
+
+                    allLineItems.add(li);
+                }
             }
-        } catch (SQLException e) {
+
+            for (LineItem item : allLineItems) {
+                for (Order order : orders) {
+
+                    if (item.getOrder().getOrderID() == order.getOrderID()){
+                        List<LineItem> lineItems = new ArrayList<>(Arrays.asList(order.getLineItems()));
+                        lineItems.add(item);
+                        order.setLineItems(lineItems.toArray(new LineItem[lineItems.size()]));
+                        item.setOrder(order);
+                    }
+                }
+            }
+            DatabaseAccess.commitTransaction();
+        }
+
+        catch (SQLException e) {
+            try {
+                DatabaseAccess.rollbackTransaction();
+            }
+            catch (SQLException ex){
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             DatabaseAccess.close();
         }
-        return orders.toArray(new Order[orders.size()]);
 
+        return orders.toArray(new Order[orders.size()]);
     }
 
     /**
@@ -96,16 +155,36 @@ public class DatabaseAccess {
 
         try {
             DatabaseAccess.open();
-            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products");
+            DatabaseAccess.beginTransaction();
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products p, ProductComments pc " +
+                    "WHERE p.id = pc.ProductId");
             result = stmt.executeQuery();
             stmt.clearParameters();
 
-            while (result.next() && result != null) {
-                prod.add(new Product(result.getInt("id"), result.getInt("QtyInStock"),
-                        result.getString("Name"), result.getString("Description"),
-                        result.getDouble("Price"), 0, null));
+            while (result.next()) {
+                boolean addFlag = true;
+
+                for (Product p : prod){
+                    if (p.getProductID() == result.getInt("id")){
+                        addFlag = false;
+                    }
+                }
+
+                if (addFlag) {
+                    prod.add(new Product(result.getInt("id"), result.getInt("QtyInStock"),
+                            result.getString("Name"), result.getString("Description"),
+                            result.getDouble("Price"), 0, new String[]{result.getString("Comment")}));
+                }
             }
-        } catch (SQLException e) {
+
+            DatabaseAccess.commitTransaction();
+        }catch (SQLException e) {
+            try {
+                DatabaseAccess.rollbackTransaction();
+            }
+            catch (SQLException ex){
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             DatabaseAccess.close();
@@ -114,46 +193,73 @@ public class DatabaseAccess {
         return prod.toArray(new Product[prod.size()]);
     }
 
-    public static Order getOrderDetails(int OrderID) {
+    public static Order getOrderDetails(int orderID) {
         // get the order details and store them in a Order object
         Order o = null;
+
         try {
             DatabaseAccess.open();
-            String query = "SELECT * FROM Order o " +
-                    "JOIN Customer c ON o.CustomerId = c.id WHERE o.id = ?";
-            PreparedStatement searchOrder = conn.prepareStatement("SELECT * FROM Orders o JOIN Customers c ON o.CustomerId = c.id WHERE o.id = ?");
-            searchOrder.setInt(1, OrderID);
+            DatabaseAccess.beginTransaction();
 
-            ResultSet rs = searchOrder.executeQuery();
-            while (rs.next()) {
-                Customer cus = new Customer(rs.getInt("CustomerId"),
-                        rs.getString("Name"), rs.getString("Email"));
-                o = new Order(OrderID, new Date(), rs.getString("Status"),
-                        cus, 0.0, null, rs.getString("ShippingAddress"),
-                        rs.getString("BillingAddress"), rs.getString("BillingInfo"));
-                // o.TotalCost = 520.20;
+            List<LineItem> items = new ArrayList<LineItem>();
+
+            PreparedStatement searchLineItem = conn.prepareStatement("SELECT * FROM LineItems li " +
+                    "JOIN Products p ON p.id = li.ProductId\n" +
+                    "INNER JOIN ProductComments pc ON pc.ProductId = p.id\n" +
+                    "WHERE li.OrderId = ?");
+
+            searchLineItem.setInt(1, orderID);
+            ResultSet result = searchLineItem.executeQuery();
+
+            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Orders o " +
+                    "JOIN Customers c ON c.id = o.CustomerId " +
+                    "WHERE o.id = ?");
+
+            stmt.setInt(1, orderID);
+            ResultSet resultSet = stmt.executeQuery();
+
+            while (resultSet.next()){
+                o = new Order(resultSet.getInt("id"), new Date(), resultSet.getString("Status"),
+                        new Customer(resultSet.getInt("CustomerId"), resultSet.getString("Name"),
+                                resultSet.getString("Email")), 0, new LineItem[]{},
+                        resultSet.getString("ShippingAddress"),
+                        resultSet.getString("BillingAddress"),
+                        resultSet.getString("BillingInfo"));
             }
-            rs.close();
 
-            // get all the LineItems and store them in a LineItem[]
-            ArrayList<LineItem> l = new ArrayList<LineItem>();
-            String query2 = "SELECT * FROM LineItems l\n" +
-                    "WHERE OrderId = ?";
-            PreparedStatement searchLineItem = conn.prepareStatement("SELECT * FROM LineItems l WHERE OrderId = ?");
-            searchLineItem.setInt(1, OrderID);
-            ResultSet items = searchLineItem.executeQuery();
-            double total = 0.0;
-            while (items.next()) {
-                double paid = items.getDouble("PricePaid");
-                int quantity = items.getInt("Quantity");
+            double total = 0;
+            while (result.next()) {
+                boolean addNew = true;
+                double paid = result.getDouble("PricePaid");
+                int quantity = result.getInt("Quantity");
+
                 total += paid * quantity;
-                Product pro = getProductDetails(items.getInt("ProductId"));
-                l.add(new LineItem(pro, o, quantity, paid));
+                //Product pro = getProductDetails(items.getInt("ProductId"));
+                for (LineItem item : items){
+                    if (item.getProduct().getProductID() == result.getInt("ProductId")){
+                        addNew = false;
+                    }
+                }
+
+                if (addNew) {
+                    items.add(new LineItem(new Product(result.getInt("ProductId"), result.getInt("QtyInStock"),
+                            result.getString("Name"), result.getString("Description"),
+                            result.getDouble("Price"), 0,
+                            new String[]{result.getString("Comment")}), o, quantity, paid));
+                }
             }
-            rs.close();
+
             o.setTotalCost(total);
-            o.setLineItems(l.toArray(new LineItem[l.size()]));
+            o.setLineItems(items.toArray(new LineItem[items.size()]));
+
+            DatabaseAccess.commitTransaction();
         } catch (SQLException e) {
+            try {
+                DatabaseAccess.rollbackTransaction();
+            }
+            catch (SQLException ex){
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             DatabaseAccess.close();
@@ -171,31 +277,43 @@ public class DatabaseAccess {
      */
     public static Product getProductDetails(int productID) {
         Product p = null;
-
+        System.out.println(productID);
         try {
             DatabaseAccess.open();
-            PreparedStatement stmt = conn.prepareStatement("SELECT pc.ProductId, p.Name, p.Description, p.Price, " +
-                    "p.QtyInStock, pc.Comment FROM ProductComments pc, Products p WHERE " +
-                    "p.id = pc.id AND pc.ProductId = ?");
+            DatabaseAccess.beginTransaction();
+
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT pc.ProductId, p.Name, p.Description, p.Price, p.QtyInStock, pc.Comment " +
+                            "FROM ProductComments pc, Products p " +
+                            "WHERE p.id = pc.id AND p.id = ?");
+
             stmt.setInt(1, productID);
+
             ResultSet result = stmt.executeQuery();
             stmt.clearParameters();
 
             while (result.next()) {
-
-                p = new Product(productID, result.getInt("QtyInStock"),
-                        result.getString("Name"), result.getString("Description"),
-                        result.getDouble("Price"), 0,
+                p = new Product(productID,
+                        result.getInt("QtyInStock"),
+                        result.getString("Name"),
+                        result.getString("Description"),
+                        result.getDouble("Price"),
+                        0,
                         new String[]{result.getString("Comment")});
             }
-
-            return p;
+            DatabaseAccess.commitTransaction();
         } catch (SQLException e) {
+            try {
+                DatabaseAccess.rollbackTransaction();
+            }
+            catch (SQLException ex){
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             DatabaseAccess.close();
         }
-        return null;
+        return p;
     }
 
     /**
@@ -211,6 +329,8 @@ public class DatabaseAccess {
         List<Customer> custList = new ArrayList<Customer>();
         try {
             DatabaseAccess.open();
+            DatabaseAccess.beginTransaction();
+
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Customers");
             result = stmt.executeQuery();
             stmt.clearParameters();
@@ -219,7 +339,15 @@ public class DatabaseAccess {
                 custList.add(new Customer(result.getInt("id"), result.getString("Name"),
                         result.getString("Email")));
             }
+            DatabaseAccess.commitTransaction();
+
         } catch (SQLException e) {
+            try{
+                DatabaseAccess.rollbackTransaction();
+            }
+            catch (SQLException ex){
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             DatabaseAccess.close();
@@ -245,6 +373,8 @@ public class DatabaseAccess {
 
         try {
             DatabaseAccess.open();
+            DatabaseAccess.beginTransaction();
+
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Orders o " +
                     "WHERE o.CustomerId = ?");
             stmt.setInt(1, customerId);
@@ -257,7 +387,15 @@ public class DatabaseAccess {
                         c, 0, null, result.getString("ShippingAddress"),
                         result.getString("BillingAddress"), result.getString("BillingInfo")));
             }
-        } catch (SQLException e) {
+
+            DatabaseAccess.commitTransaction();
+         } catch (SQLException e) {
+            try {
+                DatabaseAccess.rollbackTransaction();
+            }
+            catch (SQLException ex){
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             DatabaseAccess.close();
@@ -280,6 +418,8 @@ public class DatabaseAccess {
 
         try {
             DatabaseAccess.open();
+            DatabaseAccess.beginTransaction();
+
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM ProductComments pc, Products p " +
                     "WHERE pc.Comment LIKE ? AND p.id = pc.ProductId");
             stmt.setString(1, "%" + query + "%");
@@ -292,7 +432,15 @@ public class DatabaseAccess {
                         result.getDouble("Price"), 0,
                         new String[]{result.getString("Comment")}));
             }
+
+            DatabaseAccess.commitTransaction();
         } catch (SQLException e) {
+            try {
+                DatabaseAccess.rollbackTransaction();
+            }
+            catch (SQLException ex){
+                ex.printStackTrace();
+            }
             e.printStackTrace();
         } finally {
             DatabaseAccess.close();
@@ -302,16 +450,23 @@ public class DatabaseAccess {
 
     public static void makeOrder(Customer c, LineItem[] lineItems) {
 
-        boolean orderSuccess = true;
-
         try {
             DatabaseAccess.open();
+            DatabaseAccess.beginTransaction();
 
+            //Order o;
+            double totalPrice = 0;
             int qtyRequested = 0;
+
             for (int k = 0; k < lineItems.length; k++) {
+                System.out.println(lineItems[k].getQuantity() + " " + lineItems[k].getOrder() + " " +
+                        lineItems[k].getProduct());
                 qtyRequested = lineItems[k].getQuantity();
 
                 int productId = lineItems[k].getProduct().getProductID();
+                totalPrice += lineItems[k].getPricePaid();
+
+                //int orderId = lineItems[k].getOrder().getOrderID();
 
                 PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Products p " +
                         "WHERE p.id = ?");
@@ -319,56 +474,98 @@ public class DatabaseAccess {
 
                 ResultSet result = stmt.executeQuery();
 
-                ResultSetMetaData data = result.getMetaData();
-
                 int qtyAvailable = 0;
+
                 while (result.next()) {
                     qtyAvailable = result.getInt("QtyInStock");
                 }
 
                 if (qtyAvailable >= qtyRequested) {
                     System.out.println("Can be created");
-                    // TODO: INSERT INTO DB HERE AND UPDATE QUANTITIES
-                    PreparedStatement p = conn.prepareStatement("SELECT * FROM Customers c " +
-                            "WHERE c.id = ?");
-                    p.setInt(1, c.getCustomerID());
-                    ResultSet res = p.executeQuery();
-                    PreparedStatement pre = conn.prepareStatement("SELECT COUNT(*) as 'id' FROM Orders");
-                    ResultSet count = pre.executeQuery();
 
-                    PreparedStatement preparedStmt = conn.prepareStatement("INSERT INTO Orders " + "VALUES (?,'Processing', '', '', '')");
-                    //preparedStmt.setInt(1, id);
-                    preparedStmt.setInt(1, c.getCustomerID());
-                    preparedStmt.execute();
-                    PreparedStatement updateProduct = conn.prepareStatement("update Products set QtyInStock = ? where id = ?");
-                    updateProduct.setInt(1, qtyAvailable - qtyRequested);
-                    updateProduct.setInt(2, productId);
-                    updateProduct.executeUpdate();
+                    PreparedStatement updateStock = conn.prepareStatement("UPDATE Products SET QtyInStock = ? WHERE id = ?");
+                    updateStock.setInt(1, qtyAvailable - qtyRequested);
+                    updateStock.setInt(2, productId);
+                    updateStock.executeUpdate();
 
                 } else {
-                    System.out.println("NO ORDER");
-                    orderSuccess = false;
+                    JOptionPane.showMessageDialog(null, "Could not create new order", "Error", JOptionPane.ERROR_MESSAGE);
+                    DatabaseAccess.rollbackTransaction();
                 }
 
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            DatabaseAccess.close();
-        }
 
-        if (orderSuccess) {
+
+            PreparedStatement p = conn.prepareStatement("SELECT * FROM Orders o " +
+                    "WHERE o.CustomerId = ?");
+            p.setInt(1, c.getCustomerID());
+            ResultSet resultSet = p.executeQuery();
+
+            String shipping = "";
+            String billing = "";
+            String info = "";
+
+            while (resultSet.next()){
+                billing = resultSet.getString("BillingAddress");
+                shipping = resultSet.getString("ShippingAddress");
+                info = resultSet.getString("BillingInfo");
+            }
+
+            System.out.println(shipping);
+            System.out.println(billing);
+            PreparedStatement stmt1 = conn.prepareStatement("INSERT INTO Orders " +
+                    "VALUES (?, ?, ?, ?, ?)");
+
+            java.sql.Date d = new java.sql.Date(new Date().getTime());
+            stmt1.setInt(1, c.getCustomerID());
+            stmt1.setString(2, "Processing");
+            stmt1.setString(3, billing);
+            stmt1.setString(4, shipping);
+            stmt1.setString(5, info);
+
+            stmt1.execute();
+
+            PreparedStatement ps = conn.prepareStatement("SELECt o.id FROM Orders o WHERE o.CustomerID = ? " +
+                    "AND o.Status = 'Processing'");
+            ps.setInt(1, c.getCustomerID());
+
+            ResultSet rs = ps.executeQuery();
+
+            int oId = -1;
+            while(rs.next()){
+                oId = rs.getInt("id");
+            }
+
+            for (int k = 0; k < lineItems.length; k++){
+                PreparedStatement updateLineItem = conn.prepareStatement("INSERT INTO LineItems " +
+                        "VALUES (?, ?, ?, ?)");
+                updateLineItem.setInt(1, oId);
+                updateLineItem.setInt(2, lineItems[k].getProduct().getProductID());
+                updateLineItem.setInt(3, lineItems[k].getQuantity());
+                updateLineItem.setDouble(4, lineItems[k].getProduct().getPrice() * lineItems[k].getQuantity());
+                updateLineItem.execute();
+            }
+
+            DatabaseAccess.commitTransaction();
+
             JOptionPane.showMessageDialog(null, "Create order for " + c.getName() + " for " +
                     Integer.toString(lineItems.length) + " items.");
-        } else {
-            JOptionPane.showMessageDialog(null, "Could not create new order", "Error", JOptionPane.ERROR_MESSAGE);
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        finally {
+            DatabaseAccess.close();
         }
     }
 
     /**
      * Puts the connection into a new transaction.
      */
-    public static void beginTransaction() throws SQLException {
+    private static void beginTransaction() throws SQLException {
+        beginTxnStmt = conn.prepareStatement(
+                "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; BEGIN TRANSACTION;");
         conn.setAutoCommit(false);  // do not commit until explicitly requested
         beginTxnStmt.executeUpdate();
     }
@@ -376,7 +573,8 @@ public class DatabaseAccess {
     /**
      * Commits the current transaction.
      */
-    public static void commitTransaction() throws SQLException {
+    private static void commitTransaction() throws SQLException {
+        commitTxnStmt = conn.prepareStatement("COMMIT TRANSACTION");
         commitTxnStmt.executeUpdate();
         conn.setAutoCommit(true);  // go back to one transaction per statement
     }
@@ -384,7 +582,8 @@ public class DatabaseAccess {
     /**
      * Aborts the current transaction.
      */
-    public static void rollbackTransaction() throws SQLException {
+    private static void rollbackTransaction() throws SQLException {
+        abortTxnStmt = conn.prepareStatement("ROLLBACK TRANSACTION");
         abortTxnStmt.executeUpdate();
         conn.setAutoCommit(true);  // go back to one transaction per statement
     }
