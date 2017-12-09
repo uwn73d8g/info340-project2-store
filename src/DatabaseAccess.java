@@ -283,7 +283,7 @@ public class DatabaseAccess {
             PreparedStatement stmt = conn.prepareStatement(
                     "SELECT pc.ProductId, p.Name, p.Description, p.Price, p.QtyInStock, pc.Comment " +
                             "FROM ProductComments pc, Products p " +
-                            "WHERE p.id = pc.id AND p.id = ?");
+                            "WHERE p.id = pc.ProductId AND p.id = ?");
 
             stmt.setInt(1, productID);
 
